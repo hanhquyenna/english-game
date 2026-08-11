@@ -1,0 +1,250 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { getClassForTeacher, getStudentSummary, getTopicsWithProgress } from "@/lib/queries";
+import { createServerSupabase } from "@/lib/supabase/server";
+import { gatherLevelInputs } from "@/lib/level-service";
+import { MASTERY_THRESHOLD } from "@/lib/level-engine";
+import { AvatarCreature } from "@/components/avatar-creature";
+import { LevelBar } from "@/components/level-bar";
+import { LevelBreakdownList, WeakestHint } from "@/components/level-breakdown";
+import { StreakPill } from "@/components/streak-pill";
+import { KudosButton } from "@/components/teacher/kudos-button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { KUDOS_LABELS } from "@/lib/personas";
+import { formatMinutes, formatWhen } from "@/lib/format";
+
+export const dynamic = "force-dynamic";
+
+export default async function TeacherStudentPage({
+  params,
+}: PageProps<"/teacher/[teacherId]/student/[studentId]">) {
+  const { teacherId, studentId } = await params;
+
+  const [student, klass] = await Promise.all([
+    getStudentSummary(studentId),
+    getClassForTeacher(teacherId),
+  ]);
+  if (!student || !klass) notFound();
+
+  const db = createServerSupabase();
+  const [inputs, topics, { data: kudos }, { data: journals }, { data: attempts }] =
+    await Promise.all([
+      gatherLevelInputs(db, studentId),
+      getTopicsWithProgress(klass.id, studentId),
+      db
+        .from("kudos")
+        .select("*")
+        .eq("student_id", studentId)
+        .order("created_at", { ascending: false })
+        .limit(8),
+      db
+        .from("journal_entries")
+        .select("*")
+        .eq("student_id", studentId)
+        .order("created_at", { ascending: false })
+        .limit(5),
+      db
+        .from("exercise_attempts")
+        .select("*")
+        .eq("student_id", studentId)
+        .order("attempted_at", { ascending: false })
+        .limit(8),
+    ]);
+
+  const raw = {
+    hours: formatMinutes(inputs.studyMinutes),
+    vocab: `${inputs.vocabMastered}/${inputs.vocabTotal} từ`,
+    exam: inputs.examScores.length
+      ? `${inputs.examScores.length} bài`
+      : "chưa có",
+    coverage: `${inputs.coveragePercents.length} bài học`,
+    grammar: `${inputs.grammarMastered}/${inputs.grammarTotal} điểm`,
+  };
+
+  return (
+    <div className="space-y-6">
+      <Link
+        href={`/teacher/${teacherId}`}
+        className="text-sm text-muted-foreground hover:underline"
+      >
+        ← Lớp học
+      </Link>
+
+      <Card>
+        <CardContent className="flex flex-wrap items-center gap-4 py-5">
+          <AvatarCreature
+            seed={student.avatarSeed}
+            size={64}
+            frameColor={student.frameColor}
+            band={student.level?.cefrBand ?? null}
+            accessories={student.accessories}
+          />
+          <div className="min-w-56 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-xl font-semibold">{student.name}</h2>
+              <StreakPill streak={student.streak} state={student.streakState} />
+              <span className="text-sm text-muted-foreground">
+                {student.totalXp} XP
+              </span>
+            </div>
+            {student.level ? (
+              <LevelBar level={student.level} className="mt-3" />
+            ) : null}
+          </div>
+          <KudosButton
+            studentId={student.id}
+            studentName={student.name}
+            teacherId={teacherId}
+          />
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Điểm trình độ đến từ đâu</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {student.level ? (
+              <>
+                <LevelBreakdownList level={student.level} raw={raw} />
+                <WeakestHint level={student.level} />
+                <p className="text-xs text-muted-foreground">
+                  Một từ hoặc điểm ngữ pháp được tính là “thành thạo” khi đạt từ{" "}
+                  {MASTERY_THRESHOLD}/100 trở lên.
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Chưa có dữ liệu trình độ.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Tiến độ theo bài học</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-3">
+              {topics.map((t) => (
+                <li key={t.id}>
+                  <div className="flex items-baseline justify-between gap-2 text-sm">
+                    <span className="font-medium">
+                      {t.title}
+                      {!t.assigned_at ? (
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          (chưa giao)
+                        </span>
+                      ) : null}
+                    </span>
+                    <span className="tabular-nums text-muted-foreground">
+                      {t.percentComplete}%
+                    </span>
+                  </div>
+                  <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-black/8">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${Math.max(1, t.percentComplete)}%`,
+                        backgroundColor: t.assigned_at
+                          ? "var(--persona)"
+                          : "var(--muted-foreground)",
+                        opacity: t.assigned_at ? 1 : 0.35,
+                      }}
+                    />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Hoạt động gần đây</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {(attempts ?? []).length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Chưa có lượt luyện tập nào.
+              </p>
+            ) : (
+              <ul className="space-y-1.5 text-sm">
+                {(attempts ?? []).map((a) => (
+                  <li key={a.id} className="flex items-center gap-2">
+                    <span aria-hidden>{a.correct ? "✅" : "❌"}</span>
+                    <span className="text-muted-foreground">
+                      {a.correct ? "Trả lời đúng" : "Trả lời sai"}
+                    </span>
+                    <span className="ml-auto text-xs text-muted-foreground">
+                      {formatWhen(a.attempted_at)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Tuyên dương & bài viết</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {(kudos ?? []).length > 0 ? (
+              <ul className="space-y-1.5 text-sm">
+                {(kudos ?? []).map((k) => (
+                  <li key={k.id} className="flex flex-wrap items-baseline gap-2">
+                    <span
+                      className="rounded-full px-2 py-0.5 text-xs font-medium"
+                      style={{
+                        backgroundColor: "var(--persona-soft)",
+                        color: "var(--persona)",
+                      }}
+                    >
+                      {KUDOS_LABELS[k.tag]}
+                    </span>
+                    {k.note ? (
+                      <span className="text-muted-foreground">{k.note}</span>
+                    ) : null}
+                    <span className="ml-auto text-xs text-muted-foreground">
+                      {formatWhen(k.created_at)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Chưa có tuyên dương nào.
+              </p>
+            )}
+
+            {(journals ?? []).length > 0 ? (
+              <ul className="space-y-2">
+                {(journals ?? []).map((j) => (
+                  <li key={j.id} className="rounded-md border p-2.5 text-sm">
+                    <p className="line-clamp-3 whitespace-pre-wrap">{j.text}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {formatWhen(j.created_at)}
+                      {j.teacher_comment ? " · đã nhận xét" : " · chưa nhận xét"}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+
+            <Link
+              href={`/teacher/${teacherId}/story`}
+              className="inline-block text-sm underline"
+              style={{ color: "var(--persona)" }}
+            >
+              Nhận xét bài viết ở Bảng tin →
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}

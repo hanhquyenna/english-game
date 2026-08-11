@@ -154,6 +154,47 @@ export function computeLevel(inputs: LevelInputs): LevelBreakdown {
   };
 }
 
+/**
+ * Rebuild a full breakdown from a stored `level_scores` row.
+ *
+ * The row persists the five sub-scores and the composite, but not the derived
+ * band-progress figures — those are recomputed here so there is exactly one
+ * definition of "how far to the next band" shared by every screen.
+ */
+export function breakdownFromRow(row: {
+  cefr_band: string;
+  composite_score: number | string;
+  hours_score: number | string;
+  vocab_score: number | string;
+  exam_score: number | string;
+  coverage_score: number | string;
+  grammar_score: number | string;
+}): LevelBreakdown {
+  const compositeScore = Number(row.composite_score);
+  const cefrBand = row.cefr_band as CefrBand;
+  const idx = CEFR_BANDS.findIndex((b) => b.band === cefrBand);
+  const current = CEFR_BANDS[Math.max(0, idx)];
+  const next = idx >= 0 && idx < CEFR_BANDS.length - 1 ? CEFR_BANDS[idx + 1] : null;
+
+  return {
+    compositeScore,
+    cefrBand,
+    nextBand: next?.band ?? null,
+    progressToNextBand: next
+      ? round1(
+          clamp(
+            ((compositeScore - current.min) / (next.min - current.min)) * 100,
+          ),
+        )
+      : 100,
+    hoursScore: Number(row.hours_score),
+    vocabScore: Number(row.vocab_score),
+    examScore: Number(row.exam_score),
+    coverageScore: Number(row.coverage_score),
+    grammarScore: Number(row.grammar_score),
+  };
+}
+
 export const INPUT_LABELS: Record<
   LevelInputKey,
   { en: string; vi: string; hint: string }
