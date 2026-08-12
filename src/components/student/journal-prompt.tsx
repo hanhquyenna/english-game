@@ -35,10 +35,10 @@ export function JournalPrompt({
     return (
       <div className="rounded-xl border bg-[var(--persona-soft)] p-4 text-left">
         <p className="font-semibold" style={{ color: "var(--persona)" }}>
-          Đã gửi bài viết ✍️
+          Sent to your teacher ✍️
         </p>
         <p className="mt-1 text-sm">
-          Cô Linh sẽ đọc và nhận xét. Bố mẹ cũng xem được bài viết này.
+          Your teacher will read it and reply. Your parents can see it too.
         </p>
       </div>
     );
@@ -51,9 +51,9 @@ export function JournalPrompt({
         onClick={() => setOpen(true)}
         className="w-full rounded-xl border border-dashed p-4 text-left transition-colors hover:bg-[var(--persona-soft)]"
       >
-        <p className="font-semibold">✍️ Viết vài câu về {topicTitle}?</p>
+        <p className="font-semibold">✍️ Write a few sentences about {topicTitle}?</p>
         <p className="mt-0.5 text-sm text-muted-foreground">
-          Không bắt buộc — nhưng cô sẽ đọc và nhận xét cho em.
+          Optional — but your teacher will read it and comment.
         </p>
       </button>
     );
@@ -70,14 +70,14 @@ export function JournalPrompt({
             setSent(true);
           } catch (err) {
             toast.error(
-              err instanceof Error ? err.message : "Không gửi được bài viết",
+              err instanceof Error ? err.message : "Could not send your writing",
             );
           }
         });
       }}
     >
       <label htmlFor="journal" className="block text-sm font-medium">
-        Viết bằng tiếng Anh về {topicTitle}
+        Write in English about {topicTitle}
       </label>
       <Textarea
         id="journal"
@@ -89,14 +89,14 @@ export function JournalPrompt({
         autoFocus
       />
       <p className="text-xs text-muted-foreground">
-        {text.trim().length}/10 ký tự tối thiểu
+        {text.trim().length}/10 characters minimum
       </p>
       <div className="flex gap-2">
         <Button type="submit" disabled={pending || text.trim().length < 10}>
-          {pending ? "Đang gửi…" : "Gửi cho cô"}
+          {pending ? "Sending…" : "Send to teacher"}
         </Button>
         <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
-          Để sau
+          Later
         </Button>
       </div>
     </form>

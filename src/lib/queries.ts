@@ -263,6 +263,34 @@ export async function getTopicsWithProgress(classId: string, studentId?: string)
   return list.map((t) => ({ ...t, percentComplete: byTopic.get(t.id) ?? 0 }));
 }
 
+/**
+ * Topics shaped for the Learn screen's island path — progress folded in and
+ * a flag for whether the unit actually has an exam to sit.
+ */
+export async function getIslandTopics(classId: string, studentId: string) {
+  const db = createServerSupabase();
+  const topics = await getTopicsWithProgress(classId, studentId);
+
+  const { data: exams } = await db
+    .from("exams")
+    .select("topic_id")
+    .eq("class_id", classId)
+    .not("published_at", "is", null);
+
+  const withExam = new Set(
+    (exams ?? []).map((e) => e.topic_id).filter((id): id is string => Boolean(id)),
+  );
+
+  return topics.map((t) => ({
+    id: t.id,
+    title: t.title,
+    subtitle: t.subtitle,
+    assigned_at: t.assigned_at,
+    percentComplete: t.percentComplete,
+    hasExam: withExam.has(t.id),
+  }));
+}
+
 /** Counts of vocab / grammar / exercises per topic, for the curriculum list. */
 export async function getTopicContentCounts(topicIds: string[]) {
   const db = createServerSupabase();

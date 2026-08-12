@@ -4,11 +4,12 @@ import { ProfileView } from "@/components/student/profile-view";
 
 export const dynamic = "force-dynamic";
 
-export default async function MyProfilePage({
+/** A classmate's profile — same renderer, read-only. */
+export default async function ClassmateProfilePage({
   params,
-}: PageProps<"/student/[studentId]/profile">) {
-  const { studentId } = await params;
-  const data = await getProfileData(studentId, studentId);
+}: PageProps<"/student/[studentId]/profile/[classmateId]">) {
+  const { studentId, classmateId } = await params;
+  const data = await getProfileData(studentId, classmateId);
   if (!data) notFound();
 
   return (
@@ -19,7 +20,7 @@ export default async function MyProfilePage({
       className={data.className}
       vocabMastered={data.vocabMastered}
       comments={data.comments}
-      isMe
+      isMe={studentId === classmateId}
     />
   );
 }

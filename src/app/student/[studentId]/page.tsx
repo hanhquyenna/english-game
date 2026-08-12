@@ -1,23 +1,25 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   getClassForStudent,
+  getIslandTopics,
   getStudentSummary,
-  getTopicContentCounts,
-  getTopicsWithProgress,
 } from "@/lib/queries";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { buildLessonPath } from "@/lib/lesson-path";
-import { LevelBar } from "@/components/level-bar";
-import { WeakestHint } from "@/components/level-breakdown";
-import { LessonNode } from "@/components/student/lesson-node";
-import { Card, CardContent } from "@/components/ui/card";
-import { formatWhen } from "@/lib/format";
-import { KUDOS_LABELS } from "@/lib/personas";
+import { buildIslands, currentPosition } from "@/lib/islands";
+import { IslandBand } from "@/components/student/island-band";
+import { StreakNotice } from "@/components/student/streak-notice";
+import { isoDate } from "@/lib/progression";
 
 export const dynamic = "force-dynamic";
 
-export default async function LessonPathPage({
+/** Scenery palette per island position, from the design prototype. */
+const ISLAND_THEMES = [
+  { bandBg: "#e9f2e4", iconBg: "#5a9f4f", ground: "#cfe6c4" },
+  { bandBg: "#e6eef6", iconBg: "#3d6fe0", ground: "#cddcee" },
+  { bandBg: "#efe9f6", iconBg: "#8f7fd6", ground: "#ded4ef" },
+];
+
+export default async function LearnPage({
   params,
 }: PageProps<"/student/[studentId]">) {
   const { studentId } = await params;
@@ -28,120 +30,55 @@ export default async function LessonPathPage({
   ]);
   if (!student) notFound();
 
-  const topics = klass ? await getTopicsWithProgress(klass.id, studentId) : [];
-  const path = buildLessonPath(topics);
-  const counts = await getTopicContentCounts(path.map((n) => n.topic.id));
+  const topics = klass ? await getIslandTopics(klass.id, studentId) : [];
+  const islands = buildIslands(topics);
+  const here = currentPosition(islands);
 
+  // The streak banner is a real warning, not decoration: it only shows when
+  // today genuinely has no practice logged yet and a streak is on the line.
   const db = createServerSupabase();
-  const [{ data: posts }, { data: kudos }] = await Promise.all([
-    klass
-      ? db
-          .from("class_posts")
-          .select("*")
-          .eq("class_id", klass.id)
-          .order("created_at", { ascending: false })
-          .limit(3)
-      : Promise.resolve({ data: [] }),
-    db
-      .from("kudos")
-      .select("*")
-      .eq("student_id", studentId)
-      .order("created_at", { ascending: false })
-      .limit(3),
-  ]);
+  const { data: today } = await db
+    .from("xp_events")
+    .select("xp")
+    .eq("student_id", studentId)
+    .eq("date", isoDate())
+    .maybeSingle();
+
+  const practisedToday = Number(today?.xp ?? 0) > 0;
+  const streakAtRisk = !practisedToday && student.streak > 0;
 
   return (
-    <div className="space-y-6">
-      {student.level ? (
-        <Card className="animate-rise">
-          <CardContent className="space-y-3 py-5">
-            <LevelBar level={student.level} size="lg" />
-            <WeakestHint level={student.level} />
-          </CardContent>
-        </Card>
-      ) : null}
+    <div>
+      {streakAtRisk ? <StreakNotice streak={student.streak} /> : null}
 
-      <section>
-        <h2 className="mb-4 text-lg font-semibold">Đường học của em</h2>
+      {islands.length === 0 ? (
+        <div className="px-5 py-16 text-center">
+          <p className="text-4xl" aria-hidden>
+            🌱
+          </p>
+          <p className="mt-3 font-display text-lg font-extrabold text-[#2a2540]">
+            No lessons yet
+          </p>
+          <p className="mt-1 text-sm text-[#8b83c4]">
+            When your teacher assigns a unit, it appears here straight away.
+          </p>
+        </div>
+      ) : (
+        islands.map((island, i) => (
+          <IslandBand
+            key={island.topicId}
+            studentId={studentId}
+            island={island}
+            theme={ISLAND_THEMES[i % ISLAND_THEMES.length]}
+            index={i}
+            here={here}
+            seed={student.avatarSeed}
+            overrides={student.overrides}
+          />
+        ))
+      )}
 
-        {path.length === 0 ? (
-          <Card>
-            <CardContent className="py-8 text-center">
-              <p className="text-4xl" aria-hidden>
-                🌱
-              </p>
-              <p className="mt-2 font-medium">Chưa có bài học nào được giao</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Khi cô giáo giao bài, bài học sẽ xuất hiện ngay tại đây.
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <ol className="relative space-y-4">
-            {path.map((node, i) => (
-              <LessonNode
-                key={node.topic.id}
-                studentId={studentId}
-                node={node}
-                index={i}
-                exerciseCount={counts.get(node.topic.id)?.exercises ?? 0}
-                isLast={i === path.length - 1}
-              />
-            ))}
-          </ol>
-        )}
-      </section>
-
-      {(kudos ?? []).length > 0 ? (
-        <section>
-          <h2 className="mb-2 text-lg font-semibold">Cô khen em</h2>
-          <ul className="space-y-2">
-            {(kudos ?? []).map((k) => (
-              <li
-                key={k.id}
-                className="flex flex-wrap items-baseline gap-2 rounded-xl border bg-card px-4 py-3 text-sm"
-              >
-                <span aria-hidden>⭐</span>
-                <span
-                  className="rounded-full px-2 py-0.5 text-xs font-semibold"
-                  style={{
-                    backgroundColor: "var(--persona-soft)",
-                    color: "var(--persona)",
-                  }}
-                >
-                  {KUDOS_LABELS[k.tag]}
-                </span>
-                {k.note ? <span>{k.note}</span> : null}
-                <span className="ml-auto text-xs text-muted-foreground">
-                  {formatWhen(k.created_at)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      {(posts ?? []).length > 0 ? (
-        <section>
-          <h2 className="mb-2 text-lg font-semibold">Bảng tin lớp</h2>
-          <ul className="space-y-2">
-            {(posts ?? []).map((p) => (
-              <li key={p.id} className="rounded-xl border bg-card px-4 py-3">
-                <p className="text-sm">{p.text}</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {formatWhen(p.created_at)}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      <p className="pb-2 text-center text-xs text-muted-foreground">
-        <Link href={`/student/${studentId}/profile`} className="underline">
-          Xem hồ sơ và bài viết của em →
-        </Link>
-      </p>
+      <div className="h-5" />
     </div>
   );
 }

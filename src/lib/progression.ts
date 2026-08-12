@@ -69,6 +69,9 @@ export function xpForAttempt(correct: boolean): number {
   return correct ? XP_CORRECT : XP_INCORRECT;
 }
 
+/** Gems awarded for finishing a practice round — the shop's only income. */
+export const GEMS_PER_ROUND = 15;
+
 /**
  * Unlock rules are strings on the `avatars` table: "streak:7", "xp:500",
  * "cefr:B2". Evaluating them here keeps the rule data-driven — a new accessory

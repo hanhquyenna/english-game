@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { isAnswerCorrect, type Question } from "@/lib/practice";
-import { logStudySession, recordAttempt } from "@/lib/actions/student";
+import { completePracticeRound, recordAttempt } from "@/lib/actions/student";
 import type { LevelBreakdown } from "@/lib/level-engine";
 import { LevelBar } from "@/components/level-bar";
 import { JournalPrompt } from "@/components/student/journal-prompt";
@@ -76,12 +76,12 @@ export function PracticeSession({
         if (result.unlocked.length) {
           setUnlocked((u) => [...u, ...result.unlocked]);
           for (const item of result.unlocked) {
-            toast.success(`Mở khoá phụ kiện mới: ${item.emoji} ${item.label}`);
+            toast.success(`New item unlocked: ${item.label}`);
           }
         }
       } catch (e) {
         toast.error(
-          e instanceof Error ? e.message : "Không lưu được kết quả",
+          e instanceof Error ? e.message : "Could not save your answer",
         );
       }
     });
@@ -91,7 +91,7 @@ export function PracticeSession({
     if (index + 1 >= round.length) {
       const minutes = Math.max(1, Math.round((Date.now() - startedAt) / 60000));
       start(async () => {
-        await logStudySession(studentId, minutes);
+        await completePracticeRound(studentId, minutes);
         setDone(true);
         router.refresh();
       });
@@ -125,7 +125,7 @@ export function PracticeSession({
         <Link
           href={`/student/${studentId}`}
           className="text-xl text-muted-foreground hover:text-foreground"
-          aria-label="Thoát bài luyện tập"
+          aria-label="Exit practice"
         >
           ✕
         </Link>
@@ -180,11 +180,11 @@ export function PracticeSession({
           )}
         >
           <p className="font-bold">
-            {checked.correct ? "🎉 Chính xác!" : "Chưa đúng rồi"}
+            {checked.correct ? "🎉 Excellent!" : "Not quite"}
           </p>
           {!checked.correct ? (
             <p className="mt-1 text-sm text-foreground">
-              Đáp án đúng:{" "}
+              Correct answer:{" "}
               <span className="font-semibold">
                 {question.kind === "CHOICE"
                   ? question.options[question.answerIndex]
@@ -212,7 +212,7 @@ export function PracticeSession({
             onClick={next}
             disabled={pending}
           >
-            {index + 1 >= round.length ? "Hoàn thành" : "Tiếp tục"}
+            {index + 1 >= round.length ? "Finish" : "Continue"}
           </Button>
         ) : (
           <Button
@@ -221,7 +221,7 @@ export function PracticeSession({
             onClick={check}
             disabled={answer === null}
           >
-            Kiểm tra
+            Check
           </Button>
         )}
       </div>
@@ -302,15 +302,15 @@ function InputQuestion({
           value={answer}
           onChange={(e) => onAnswer(e.target.value)}
           disabled={Boolean(checked)}
-          placeholder="Nhập câu trả lời…"
-          aria-label="Câu trả lời"
+          placeholder="Type your answer…"
+          aria-label="Your answer"
           autoFocus
           className="h-14 text-lg"
         />
       </form>
       {question.hint ? (
         <p className="mt-2 text-sm text-muted-foreground">
-          Gợi ý: {question.hint}
+          Hint: {question.hint}
         </p>
       ) : null}
     </>
@@ -402,9 +402,9 @@ function SessionComplete({
         <p className="text-6xl" aria-hidden>
           {correctCount === total ? "🏆" : "🎉"}
         </p>
-        <h2 className="mt-3 text-2xl font-bold">Hoàn thành!</h2>
+        <h2 className="mt-3 text-2xl font-bold">Lesson complete!</h2>
         <p className="mt-1 text-muted-foreground">
-          {topicTitle} — đúng {correctCount}/{total} câu
+          {topicTitle} — {correctCount}/{total} correct
         </p>
       </div>
 
@@ -413,19 +413,19 @@ function SessionComplete({
           <p className="text-2xl font-bold" style={{ color: "var(--persona)" }}>
             +{xpEarned}
           </p>
-          <p className="text-xs text-muted-foreground">XP nhận được</p>
+          <p className="text-xs text-muted-foreground">XP earned</p>
         </div>
         <div className="rounded-xl border bg-card p-4">
           <p className="text-2xl font-bold" style={{ color: "var(--persona)" }}>
             🔥 {streak ?? "—"}
           </p>
-          <p className="text-xs text-muted-foreground">ngày liên tiếp</p>
+          <p className="text-xs text-muted-foreground">day streak</p>
         </div>
       </div>
 
       {level ? (
         <div className="rounded-xl border bg-card p-4 text-left">
-          <p className="mb-2 text-sm font-medium">Trình độ của em bây giờ</p>
+          <p className="mb-2 text-sm font-medium">Your level now</p>
           <LevelBar level={level} />
         </div>
       ) : null}
@@ -433,7 +433,7 @@ function SessionComplete({
       {unlocked.length > 0 ? (
         <div className="animate-pop rounded-xl border bg-[var(--persona-soft)] p-4">
           <p className="font-semibold" style={{ color: "var(--persona)" }}>
-            Mở khoá phụ kiện mới!
+            New item unlocked!
           </p>
           <p className="mt-1 text-sm">
             {unlocked.map((u) => `${u.emoji} ${u.label}`).join(" · ")}
@@ -454,7 +454,7 @@ function SessionComplete({
           className="h-12 px-6 text-base"
           render={<Link href={`/student/${studentId}`} />}
         >
-          Về đường học
+          Back to path
         </Button>
         <Button
           variant="outline"
@@ -462,7 +462,7 @@ function SessionComplete({
           className="h-12 px-6 text-base"
           render={<Link href={`/student/${studentId}/practice/${topicId}`} />}
         >
-          Luyện tiếp
+          Practise again
         </Button>
       </div>
     </div>

@@ -57,11 +57,13 @@ type GrammarSeed = { name: string; explanation: string };
 
 const UNITS: Array<{
   title: string;
+  subtitle: string;
   vocab: VocabSeed[];
   grammar: GrammarSeed[];
 }> = [
   {
     title: "Unit 1: Greetings",
+    subtitle: "Everyday life & greetings",
     vocab: [
       { term: "greet", meaning: "chào hỏi", example: "She greeted me with a warm smile." },
       { term: "introduce", meaning: "giới thiệu", example: "Let me introduce my friend Nam." },
@@ -87,6 +89,7 @@ const UNITS: Array<{
   },
   {
     title: "Unit 2: Family",
+    subtitle: "Family & relationships",
     vocab: [
       { term: "relative", meaning: "họ hàng", example: "All our relatives came to the wedding." },
       { term: "sibling", meaning: "anh chị em ruột", example: "I have two siblings, a brother and a sister." },
@@ -112,6 +115,7 @@ const UNITS: Array<{
   },
   {
     title: "Unit 3: Daily Routine",
+    subtitle: "School & daily routines",
     vocab: [
       { term: "routine", meaning: "thói quen hằng ngày", example: "My morning routine starts at six." },
       { term: "commute", meaning: "đi lại (đi học, đi làm)", example: "I commute to school by bus." },
@@ -409,6 +413,7 @@ async function main() {
           id: TOPIC[i],
           class_id: CLASS,
           title: u.title,
+          subtitle: u.subtitle,
           order: i + 1,
           cefr_level: "B1",
           assigned_at: i < 2 ? new Date(Date.now() - 86400000 * 20).toISOString() : null,

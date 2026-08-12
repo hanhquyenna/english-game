@@ -131,6 +131,8 @@
    ============================================================================ */
 
 @theme inline {
+  --font-display: var(--font-display);
+  --font-ui: var(--font-ui);
   --color-canvas: var(--canvas);
   --color-persona: var(--persona);
   --color-persona-foreground: var(--persona-foreground);

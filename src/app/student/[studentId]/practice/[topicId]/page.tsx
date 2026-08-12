@@ -4,6 +4,7 @@ import { getClassForStudent, getTopicsWithProgress } from "@/lib/queries";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { buildLessonPath } from "@/lib/lesson-path";
 import { buildRound } from "@/lib/practice";
+import { sliceForLevel } from "@/lib/islands";
 import { PracticeSession } from "@/components/student/practice-session";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -11,8 +12,11 @@ export const dynamic = "force-dynamic";
 
 export default async function PracticePage({
   params,
+  searchParams,
 }: PageProps<"/student/[studentId]/practice/[topicId]">) {
   const { studentId, topicId } = await params;
+  const { level } = await searchParams;
+  const levelNumber = Number(level);
 
   const klass = await getClassForStudent(studentId);
   if (!klass) notFound();
@@ -30,16 +34,16 @@ export default async function PracticePage({
           <p className="text-4xl" aria-hidden>
             🔒
           </p>
-          <p className="font-medium">Bài học này chưa mở khoá</p>
+          <p className="font-medium">This lesson is locked</p>
           <p className="text-sm text-muted-foreground">
-            {node?.lockedReason ?? "Cô giáo chưa giao bài học này cho lớp."}
+            {node?.lockedReason ?? "Your teacher has not assigned this unit yet."}
           </p>
           <Link
             href={`/student/${studentId}`}
             className="inline-block underline"
             style={{ color: "var(--persona)" }}
           >
-            ← Quay lại đường học
+            ← Back to your path
           </Link>
         </CardContent>
       </Card>
@@ -61,7 +65,14 @@ export default async function PracticePage({
         .eq("correct", true),
     ]);
 
-  const round = buildRound(exercises ?? [], {
+  // A level is a fixed slice of the unit's exercises, so "Level 3" always
+  // means the same questions. Without a level we practise the whole unit.
+  const pool =
+    Number.isFinite(levelNumber) && levelNumber > 0
+      ? sliceForLevel(exercises ?? [], levelNumber)
+      : (exercises ?? []);
+
+  const round = buildRound(pool, {
     masteredIds: new Set((correctAttempts ?? []).map((a) => a.exercise_id)),
     vocabMeanings: (vocab ?? []).map((v) => v.meaning),
     seed: Math.floor(Math.random() * 100000),
@@ -74,16 +85,16 @@ export default async function PracticePage({
           <p className="text-4xl" aria-hidden>
             📭
           </p>
-          <p className="font-medium">Bài học này chưa có bài tập nào</p>
+          <p className="font-medium">No exercises in this lesson yet</p>
           <p className="text-sm text-muted-foreground">
-            Cô giáo sẽ thêm bài tập sớm thôi.
+            Your teacher will add some soon.
           </p>
           <Link
             href={`/student/${studentId}`}
             className="inline-block underline"
             style={{ color: "var(--persona)" }}
           >
-            ← Quay lại đường học
+            ← Back to your path
           </Link>
         </CardContent>
       </Card>

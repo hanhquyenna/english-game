@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Be_Vietnam_Pro, JetBrains_Mono } from "next/font/google";
+import { Be_Vietnam_Pro, Inter, JetBrains_Mono, Nunito } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -21,6 +21,24 @@ const mono = JetBrains_Mono({
   display: "swap",
 });
 
+/**
+ * The student app is built to the design prototype, which sets Nunito for
+ * numbers and headings and Inter for labels. Teacher and parent stay on
+ * Be Vietnam Pro for their Vietnamese copy.
+ */
+const display = Nunito({
+  variable: "--font-display",
+  subsets: ["latin", "vietnamese"],
+  weight: ["700", "800", "900"],
+  display: "swap",
+});
+
+const ui = Inter({
+  variable: "--font-ui",
+  subsets: ["latin", "vietnamese"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "Beeblast",
   description:
@@ -31,7 +49,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="vi"
-      className={`${sans.variable} ${mono.variable} h-full antialiased`}
+      className={`${sans.variable} ${mono.variable} ${display.variable} ${ui.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-canvas">
         {children}

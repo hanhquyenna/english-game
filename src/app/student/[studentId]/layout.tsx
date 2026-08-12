@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import { getStudentSummary } from "@/lib/queries";
-import { PersonaShell } from "@/components/persona-shell";
-import { LiveBadge } from "@/components/live-badge";
+import { StudentShell } from "@/components/student/student-shell";
 
 export const dynamic = "force-dynamic";
 
@@ -13,25 +12,16 @@ export default async function StudentLayout({
   const student = await getStudentSummary(studentId);
   if (!student) notFound();
 
-  const base = `/student/${studentId}`;
-
   return (
-    <PersonaShell
-      persona="student"
-      title={`Chào ${student.name}!`}
-      subtitle={`🔥 ${student.streak} ngày · ${student.totalXp} XP${
-        student.level ? ` · ${student.level.cefrBand}` : ""
-      }`}
-      headerRight={
-        <LiveBadge tables={["topics", "level_scores", "notifications"]} />
-      }
-      nav={[
-        { href: base, label: "Học", icon: "🗺️" },
-        { href: `${base}/leaderboard`, label: "Bảng xếp hạng", icon: "🏆" },
-        { href: `${base}/profile`, label: "Hồ sơ", icon: "🧑‍🚀" },
-      ]}
+    <StudentShell
+      studentId={studentId}
+      seed={student.avatarSeed}
+      overrides={student.overrides}
+      items={student.items}
+      streak={student.streak}
+      gems={student.gems}
     >
       {children}
-    </PersonaShell>
+    </StudentShell>
   );
 }

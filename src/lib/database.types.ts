@@ -90,6 +90,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          school: string
           teacher_id: string
         }
         Insert: {
@@ -97,6 +98,7 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
+          school?: string
           teacher_id: string
         }
         Update: {
@@ -104,6 +106,7 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          school?: string
           teacher_id?: string
         }
         Relationships: [
@@ -725,6 +728,7 @@ export type Database = {
           created_at: string
           id: string
           order: number
+          subtitle: string | null
           title: string
         }
         Insert: {
@@ -734,6 +738,7 @@ export type Database = {
           created_at?: string
           id?: string
           order: number
+          subtitle?: string | null
           title: string
         }
         Update: {
@@ -743,6 +748,7 @@ export type Database = {
           created_at?: string
           id?: string
           order?: number
+          subtitle?: string | null
           title?: string
         }
         Relationships: [

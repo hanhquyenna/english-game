@@ -5,6 +5,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { recomputeLevel } from "@/lib/level-service";
 import {
   computeStreak,
+  GEMS_PER_ROUND,
   isoDate,
   isUnlocked,
   xpForAttempt,
@@ -279,18 +280,39 @@ async function evaluateUnlocks(
   }));
 }
 
-/** Logged at the end of a practice round — feeds the hours input. */
-export async function logStudySession(studentId: string, minutes: number) {
+/**
+ * End of a practice round: bank the time on task and pay out gems.
+ *
+ * Returns the new balance so the completion screen can show a real number
+ * rather than assuming the write succeeded.
+ */
+export async function completePracticeRound(
+  studentId: string,
+  minutes: number,
+) {
   const db = createServerSupabase();
-  const safe = Math.max(0, Math.min(180, Math.round(minutes)));
-  if (safe === 0) return;
+  const safe = Math.max(1, Math.min(180, Math.round(minutes)));
 
   await db
     .from("study_sessions")
     .insert({ student_id: studentId, minutes: safe });
 
-  await recomputeLevel(db, studentId);
+  const { data: avatar } = await db
+    .from("student_avatars")
+    .select("gems")
+    .eq("student_id", studentId)
+    .maybeSingle();
+
+  const gems = Number(avatar?.gems ?? 0) + GEMS_PER_ROUND;
+  await db
+    .from("student_avatars")
+    .update({ gems })
+    .eq("student_id", studentId);
+
+  const breakdown = await recomputeLevel(db, studentId);
+
   revalidatePath("/", "layout");
+  return { gems, earnedGems: GEMS_PER_ROUND, breakdown };
 }
 
 export async function submitJournal(
