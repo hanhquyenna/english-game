@@ -15,23 +15,29 @@ export type Database = {
       avatars: {
         Row: {
           category: Database["public"]["Enums"]["avatar_category"]
+          cost: number
           id: string
           image_url: string
           label: string
+          slot: string | null
           unlock_rule: string
         }
         Insert: {
           category: Database["public"]["Enums"]["avatar_category"]
+          cost?: number
           id?: string
           image_url: string
           label: string
+          slot?: string | null
           unlock_rule: string
         }
         Update: {
           category?: Database["public"]["Enums"]["avatar_category"]
+          cost?: number
           id?: string
           image_url?: string
           label?: string
+          slot?: string | null
           unlock_rule?: string
         }
         Relationships: []
@@ -561,6 +567,8 @@ export type Database = {
           base_avatar_seed: string
           current_rank_frame_id: string | null
           equipped_accessory_ids: Json
+          gems: number
+          peep_overrides: Json
           student_id: string
           unlocked_accessory_ids: Json
         }
@@ -568,6 +576,8 @@ export type Database = {
           base_avatar_seed: string
           current_rank_frame_id?: string | null
           equipped_accessory_ids?: Json
+          gems?: number
+          peep_overrides?: Json
           student_id: string
           unlocked_accessory_ids?: Json
         }
@@ -575,6 +585,8 @@ export type Database = {
           base_avatar_seed?: string
           current_rank_frame_id?: string | null
           equipped_accessory_ids?: Json
+          gems?: number
+          peep_overrides?: Json
           student_id?: string
           unlocked_accessory_ids?: Json
         }
@@ -875,7 +887,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      reset_demo_data: { Args: never; Returns: undefined }
     }
     Enums: {
       avatar_category: "BASE" | "ACCESSORY" | "RANK_FRAME"

@@ -4,7 +4,7 @@ import { getClassForTeacher, getStudentSummary, getTopicsWithProgress } from "@/
 import { createServerSupabase } from "@/lib/supabase/server";
 import { gatherLevelInputs } from "@/lib/level-service";
 import { MASTERY_THRESHOLD } from "@/lib/level-engine";
-import { AvatarCreature } from "@/components/avatar-creature";
+import { StudentAvatar } from "@/components/student-avatar";
 import { LevelBar } from "@/components/level-bar";
 import { LevelBreakdownList, WeakestHint } from "@/components/level-breakdown";
 import { StreakPill } from "@/components/streak-pill";
@@ -72,12 +72,13 @@ export default async function TeacherStudentPage({
 
       <Card>
         <CardContent className="flex flex-wrap items-center gap-4 py-5">
-          <AvatarCreature
+          <StudentAvatar
             seed={student.avatarSeed}
             size={64}
-            frameColor={student.frameColor}
-            band={student.level?.cefrBand ?? null}
-            accessories={student.accessories}
+            ring={student.frameColor}
+            label={student.level?.cefrBand ?? null}
+            items={student.items}
+            overrides={student.overrides}
           />
           <div className="min-w-56 flex-1">
             <div className="flex flex-wrap items-center gap-2">

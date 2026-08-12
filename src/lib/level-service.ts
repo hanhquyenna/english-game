@@ -161,7 +161,7 @@ export async function recomputeLevel(
     grammar_score: breakdown.grammarScore,
   });
 
-  if (didBandChange(previous, breakdown)) {
+  if (didBandChange(previous?.cefr_band, breakdown)) {
     await onBandChange(db, studentId, previous!.cefr_band, breakdown.cefrBand);
   }
 

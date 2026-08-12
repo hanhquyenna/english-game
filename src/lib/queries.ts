@@ -3,6 +3,7 @@ import "server-only";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { breakdownFromRow, type LevelBreakdown } from "@/lib/level-engine";
 import { computeStreak, isoDate, streakState, type StreakState } from "@/lib/progression";
+import { ITEM_COLORS, type EquippedItem, type PeepConfig } from "@/lib/peeps";
 import type { Tables } from "@/lib/database.types";
 
 export type StudentSummary = {
@@ -12,9 +13,12 @@ export type StudentSummary = {
   streak: number;
   streakState: StreakState;
   totalXp: number;
+  /** Everything <StudentAvatar/> needs — one identity across every screen. */
   avatarSeed: string;
   frameColor: string | null;
-  accessories: string[];
+  items: EquippedItem[];
+  overrides: Partial<PeepConfig>;
+  gems: number;
 };
 
 export async function getUsers() {
@@ -119,21 +123,36 @@ export async function getAvatars(studentIds: string[]) {
   const byId = new Map((catalogue ?? []).map((a) => [a.id, a]));
   const map = new Map<
     string,
-    { seed: string; frameColor: string | null; accessories: string[] }
+    {
+      seed: string;
+      frameColor: string | null;
+      items: EquippedItem[];
+      overrides: Partial<PeepConfig>;
+      gems: number;
+    }
   >();
 
   for (const row of studentAvatars ?? []) {
     const equipped = Array.isArray(row.equipped_accessory_ids)
       ? (row.equipped_accessory_ids as string[])
       : [];
+
     map.set(row.student_id, {
       seed: row.base_avatar_seed,
       frameColor: row.current_rank_frame_id
         ? (byId.get(row.current_rank_frame_id)?.image_url ?? null)
         : null,
-      accessories: equipped
-        .map((id) => byId.get(id)?.image_url)
-        .filter((x): x is string => Boolean(x)),
+      items: equipped
+        .map((id) => byId.get(id))
+        .filter((a): a is NonNullable<typeof a> => Boolean(a))
+        .map((a) => ({
+          icon: a.image_url,
+          slot: (a.slot === "badge" ? "badge" : "hat") as EquippedItem["slot"],
+          color: ITEM_COLORS[a.image_url],
+          label: a.label,
+        })),
+      overrides: (row.peep_overrides ?? {}) as Partial<PeepConfig>,
+      gems: Number(row.gems ?? 0),
     });
   }
   return map;
@@ -174,7 +193,9 @@ export async function getRoster(classId: string): Promise<StudentSummary[]> {
         totalXp: xp.get(s.id) ?? 0,
         avatarSeed: avatar?.seed ?? s.id,
         frameColor: avatar?.frameColor ?? null,
-        accessories: avatar?.accessories ?? [],
+        items: avatar?.items ?? [],
+        overrides: avatar?.overrides ?? {},
+        gems: avatar?.gems ?? 0,
       };
     })
     .sort((a, b) => (b.level?.compositeScore ?? 0) - (a.level?.compositeScore ?? 0));
@@ -206,7 +227,9 @@ export async function getStudentSummary(
     totalXp: xp.get(studentId) ?? 0,
     avatarSeed: avatar?.seed ?? studentId,
     frameColor: avatar?.frameColor ?? null,
-    accessories: avatar?.accessories ?? [],
+    items: avatar?.items ?? [],
+    overrides: avatar?.overrides ?? {},
+    gems: avatar?.gems ?? 0,
   };
 }
 

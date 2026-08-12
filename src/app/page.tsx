@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getUsers, getLatestLevels } from "@/lib/queries";
 import { PERSONA_BY_ROLE, PERSONAS, homeFor } from "@/lib/personas";
-import { AvatarCreature } from "@/components/avatar-creature";
+import { StudentAvatar } from "@/components/student-avatar";
 import { createServerSupabase } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -78,10 +78,10 @@ export default async function RolePicker() {
                       className="flex items-center gap-3 rounded-lg border bg-background px-3 py-2.5 transition-colors hover:bg-[var(--persona-soft)]"
                     >
                       {persona === "student" ? (
-                        <AvatarCreature
+                        <StudentAvatar
                           seed={seedFor.get(u.id) ?? u.id}
                           size={36}
-                          frameColor="var(--persona)"
+                          ring="var(--persona)"
                         />
                       ) : (
                         <span

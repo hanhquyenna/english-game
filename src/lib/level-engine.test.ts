@@ -261,10 +261,11 @@ describe("contribution", () => {
 describe("didBandChange", () => {
   it("is false on a student's first ever computation", () => {
     expect(didBandChange(null, computeLevel(perfect))).toBe(false);
+    expect(didBandChange(undefined, computeLevel(perfect))).toBe(false);
   });
 
   it("detects a crossing", () => {
-    expect(didBandChange({ cefrBand: "B1" }, computeLevel(perfect))).toBe(true);
+    expect(didBandChange("B1", computeLevel(perfect))).toBe(true);
   });
 
   it("ignores a move that stays inside the same band", () => {
@@ -275,7 +276,7 @@ describe("didBandChange", () => {
       examScores: [92],
     });
     expect(r.cefrBand).toBe("B1");
-    expect(didBandChange({ cefrBand: "B1" }, r)).toBe(false);
+    expect(didBandChange("B1", r)).toBe(false);
   });
 });
 

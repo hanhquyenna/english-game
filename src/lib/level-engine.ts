@@ -272,12 +272,19 @@ export function contribution(
   return round1(scores[key] * LEVEL_WEIGHTS[key]);
 }
 
-/** True when a recompute moved the student across a band boundary. */
+/**
+ * True when a recompute moved the student across a band boundary.
+ *
+ * Takes the previous band as a plain string rather than an object: it is fed
+ * straight from a snake_case `level_scores` row, and an object parameter made
+ * it far too easy to hand over a row whose `cefrBand` is silently undefined —
+ * which reads as "changed" on every single recompute.
+ */
 export function didBandChange(
-  previous: { cefrBand: string } | null,
+  previousBand: string | null | undefined,
   next: LevelBreakdown,
 ): boolean {
-  return previous !== null && previous.cefrBand !== next.cefrBand;
+  return Boolean(previousBand) && previousBand !== next.cefrBand;
 }
 
 /** Band ordering helper — used to tell a rank-up from a rank-down. */

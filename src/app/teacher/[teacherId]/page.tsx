@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getClassForTeacher, getRoster } from "@/lib/queries";
 import { INPUT_LABELS, weakestInput } from "@/lib/level-engine";
-import { AvatarCreature } from "@/components/avatar-creature";
+import { StudentAvatar } from "@/components/student-avatar";
 import { LevelBar } from "@/components/level-bar";
 import { KudosButton } from "@/components/teacher/kudos-button";
 import { StreakCheckButton } from "@/components/teacher/streak-check-button";
@@ -146,12 +146,13 @@ export default async function TeacherDashboard({
                           href={`/teacher/${teacherId}/student/${student.id}`}
                           className="flex items-center gap-3 hover:underline"
                         >
-                          <AvatarCreature
+                          <StudentAvatar
                             seed={student.avatarSeed}
                             size={38}
-                            frameColor={student.frameColor}
-                            band={student.level?.cefrBand ?? null}
-                            accessories={student.accessories}
+                            ring={student.frameColor}
+                            label={student.level?.cefrBand ?? null}
+                            items={student.items}
+            overrides={student.overrides}
                           />
                           <span>
                             <span className="block font-medium">

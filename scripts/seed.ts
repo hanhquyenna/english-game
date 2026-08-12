@@ -242,9 +242,9 @@ const PRACTICE: Array<
       type: "FILL_BLANK",
       grammar: 0,
       content: {
-        prompt: "That is Minh___ bicycle.",
-        answer: "'s",
-        hint: "sở hữu cách với người",
+        prompt: "My mother is very ___ of my studies.",
+        answer: "supportive",
+        hint: "tính từ: biết ủng hộ, hỗ trợ",
       },
     },
     {
@@ -427,6 +427,7 @@ async function main() {
   // Index maps so exercises can point at the right vocab / grammar rows.
   const vocabIdsByTopic: string[][] = [[], [], []];
   const grammarIdsByTopic: string[][] = [[], [], []];
+  const exerciseIdsByTopic: string[][] = [[], [], []];
 
   UNITS.forEach((unit, ti) => {
     unit.vocab.forEach((v) => {
@@ -441,8 +442,10 @@ async function main() {
         cefr_level: "B1",
       });
       // Every vocab item gets a flashcard exercise.
+      const exId = exerciseId(++eN);
+      exerciseIdsByTopic[ti].push(exId);
       exerciseRows.push({
-        id: exerciseId(++eN),
+        id: exId,
         topic_id: TOPIC[ti],
         type: "VOCAB_CARD",
         vocab_item_id: id,
@@ -469,8 +472,10 @@ async function main() {
 
   PRACTICE.forEach((items, ti) => {
     items.forEach((item) => {
+      const exId = exerciseId(++eN);
+      exerciseIdsByTopic[ti].push(exId);
       exerciseRows.push({
-        id: exerciseId(++eN),
+        id: exId,
         topic_id: TOPIC[ti],
         type: item.type,
         grammar_point_id:
@@ -492,32 +497,38 @@ async function main() {
     { band: "C1", color: "#b45309" },
     { band: "C2", color: "#be123c" },
   ];
+  // Items layered on the Open Peeps character. `image_url` is the filename
+  // stem in public/assets/items; `slot` says where it sits on the figure.
   const accessories = [
-    { label: "Mũ tiệc", emoji: "🎉", rule: "streak:3" },
-    { label: "Mũ phù thuỷ", emoji: "🎩", rule: "streak:7" },
-    { label: "Vương miện", emoji: "👑", rule: "streak:14" },
-    { label: "Ngọn lửa 30 ngày", emoji: "🔥", rule: "streak:30" },
-    { label: "Ngôi sao", emoji: "⭐", rule: "xp:250" },
-    { label: "Tên lửa", emoji: "🚀", rule: "xp:500" },
-    { label: "Kỳ lân", emoji: "🦄", rule: "xp:1000" },
-    { label: "Huy chương B2", emoji: "🏅", rule: "cefr:B2" },
+    { label: "Mũ hề", icon: "jester-hat", slot: "hat", rule: "streak:3", cost: 0 },
+    { label: "Mũ tốt nghiệp", icon: "study-cap", slot: "hat", rule: "streak:7", cost: 150 },
+    { label: "Vương miện", icon: "crown", slot: "hat", rule: "streak:14", cost: 300 },
+    { label: "Ngọn lửa 30 ngày", icon: "flame", slot: "badge", rule: "streak:30", cost: 0 },
+    { label: "Huy chương", icon: "medal", slot: "badge", rule: "xp:250", cost: 100 },
+    { label: "Ngọc quý", icon: "gem", slot: "badge", rule: "xp:500", cost: 200 },
   ];
 
   let aN = 0;
   const avatarRows = [
+    // Explicit slot/cost: a bulk insert takes the union of every object's keys
+    // and nulls anything missing, so column defaults never get a chance to apply.
     ...rankFrames.map((f) => ({
       id: avatarId(++aN),
       image_url: f.color,
       category: "RANK_FRAME" as const,
       label: `Khung ${f.band}`,
       unlock_rule: `cefr:${f.band}`,
+      slot: null,
+      cost: 0,
     })),
     ...accessories.map((a) => ({
       id: avatarId(++aN),
-      image_url: a.emoji,
+      image_url: a.icon,
       category: "ACCESSORY" as const,
       label: a.label,
       unlock_rule: a.rule,
+      slot: a.slot,
+      cost: a.cost,
     })),
   ];
   ok("avatars", (await db.from("avatars").insert(avatarRows)).error);
@@ -531,28 +542,32 @@ async function main() {
       await db.from("student_avatars").insert([
         {
           student_id: STUDENTS.minh,
-          base_avatar_seed: "minh-bee-2201",
+          base_avatar_seed: "minh-seed-01",
+          gems: 340,
           current_rank_frame_id: frameFor("B1"),
           unlocked_accessory_ids: [],
           equipped_accessory_ids: [],
         },
         {
           student_id: STUDENTS.an,
-          base_avatar_seed: "an-bee-7734",
+          base_avatar_seed: "an-seed-02",
+          gems: 520,
           current_rank_frame_id: frameFor("B1"),
           unlocked_accessory_ids: [],
           equipped_accessory_ids: [],
         },
         {
           student_id: STUDENTS.bao,
-          base_avatar_seed: "bao-bee-4419",
+          base_avatar_seed: "bao-seed-03",
+          gems: 60,
           current_rank_frame_id: frameFor("B1"),
           unlocked_accessory_ids: [],
           equipped_accessory_ids: [],
         },
         {
           student_id: STUDENTS.chi,
-          base_avatar_seed: "chi-bee-9052",
+          base_avatar_seed: "chi-seed-04",
+          gems: 210,
           current_rank_frame_id: frameFor("B1"),
           unlocked_accessory_ids: [],
           equipped_accessory_ids: [],
@@ -669,21 +684,46 @@ async function main() {
   ok("vocab mastery", (await db.from("vocab_mastery").insert(vocabMasteryRows)).error);
   ok("grammar mastery", (await db.from("grammar_mastery").insert(grammarMasteryRows)).error);
 
-  ok(
-    "topic progress",
-    (
-      await db.from("topic_progress").insert([
-        { student_id: STUDENTS.minh, topic_id: TOPIC[0], percent_complete: 100 },
-        { student_id: STUDENTS.minh, topic_id: TOPIC[1], percent_complete: 40 },
-        { student_id: STUDENTS.an, topic_id: TOPIC[0], percent_complete: 100 },
-        { student_id: STUDENTS.an, topic_id: TOPIC[1], percent_complete: 85 },
-        { student_id: STUDENTS.bao, topic_id: TOPIC[0], percent_complete: 45 },
-        { student_id: STUDENTS.bao, topic_id: TOPIC[1], percent_complete: 5 },
-        { student_id: STUDENTS.chi, topic_id: TOPIC[0], percent_complete: 100 },
-        { student_id: STUDENTS.chi, topic_id: TOPIC[1], percent_complete: 55 },
-      ])
-    ).error,
-  );
+  // ----------------------------------------------------------- coverage
+  //
+  // The app derives topic_progress from real attempts (share of a topic's
+  // exercises answered correctly at least once). So the seed has to lay down
+  // the attempts too — writing a bare percentage here would look right until
+  // the first live answer recomputed it from an empty history and collapsed it.
+  //
+  // Correct attempts per student, per assigned topic:
+  const coverage: Array<[string, number, number]> = [
+    //          student,          Unit 1, Unit 2  (out of 14 exercises each)
+    [STUDENTS.minh, 14, 6], // 100% / 43% — 43% clears the 40% unlock gate
+    [STUDENTS.an, 14, 12], // 100% / 86%
+    [STUDENTS.bao, 6, 1], //  43% /  7% — visibly behind
+    [STUDENTS.chi, 14, 8], // 100% / 57%
+  ];
+
+  const attemptRows: Array<Record<string, unknown>> = [];
+  const progressRows: Array<Record<string, unknown>> = [];
+
+  for (const [studentId, ...perTopic] of coverage) {
+    perTopic.forEach((correctCount, ti) => {
+      const ids = exerciseIdsByTopic[ti];
+      ids.slice(0, correctCount).forEach((exId, i) => {
+        attemptRows.push({
+          student_id: studentId,
+          exercise_id: exId,
+          correct: true,
+          attempted_at: `${addDays(TODAY, -(20 - (i % 18)))}T10:00:00Z`,
+        });
+      });
+      progressRows.push({
+        student_id: studentId,
+        topic_id: TOPIC[ti],
+        percent_complete: Math.round((correctCount / ids.length) * 100),
+      });
+    });
+  }
+
+  ok("exercise attempts", (await db.from("exercise_attempts").insert(attemptRows)).error);
+  ok("topic progress", (await db.from("topic_progress").insert(progressRows)).error);
 
   // ------------------------------------------------------------- exams
   // Unit 1 exam: fully graded. Unit 2 exam: Minh's submission is UNGRADED,
@@ -723,12 +763,13 @@ async function main() {
     "submissions",
     (
       await db.from("submissions").insert([
-        // Unit 1 — graded. Minh's 66 is what puts him at composite 48.
+        // Unit 1 — graded. Minh's 65 is what puts him at composite 48.0,
+        // i.e. B1 exactly 40% of the way to B2 (§7 step 1).
         {
           exam_id: examId(1),
           student_id: STUDENTS.minh,
           answers: { [String(u1Exercises[0])]: 1, [String(u1Exercises[1])]: 2 },
-          score: 66,
+          score: 65,
           graded_at: new Date(Date.now() - 86400000 * 12).toISOString(),
         },
         {
