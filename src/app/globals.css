@@ -133,6 +133,8 @@
 @theme inline {
   --font-display: var(--font-display);
   --font-ui: var(--font-ui);
+  --font-st-display: var(--font-st-display);
+  --font-st-mono: var(--font-st-mono);
   --color-canvas: var(--canvas);
   --color-persona: var(--persona);
   --color-persona-foreground: var(--persona-foreground);
@@ -150,6 +152,11 @@
   --warning: oklch(0.72 0.16 70);
   --danger: oklch(0.58 0.2 25);
 
+  /* The student prototype uses system Georgia + monospace, not webfonts. */
+  --font-st-display: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  --font-st-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    monospace;
+
   /* Defaults to the student accent; overridden per persona below. */
   --persona: #534ab7;
   --persona-foreground: #ffffff;
@@ -157,16 +164,83 @@
   --persona-border: color-mix(in oklab, #534ab7 22%, white);
 }
 
+/* ---------------------------------------------------------------------------
+   Student app — design tokens from the UX deep-dive prototype
+   (artifacts/student-learning-app). A warm neo-brutalist system: cream paper,
+   terracotta ink, 2px hard borders, offset shadows with no blur, near-square
+   corners, Georgia for display and monospace for labels.
+
+   Deliberately different from the teacher/parent purple system: this is the
+   kids' app, and the prototype is the source of truth for it.
+   --------------------------------------------------------------------------- */
 [data-persona="student"] {
-  --persona: #534ab7;
-  --persona-foreground: #ffffff;
-  --persona-soft: color-mix(in oklab, #534ab7 10%, white);
-  --persona-border: color-mix(in oklab, #534ab7 22%, white);
-  --primary: #534ab7;
-  --primary-foreground: #ffffff;
-  --ring: #534ab7;
-  /* Student screens are allowed to be more playful (§3). */
-  --radius: 1rem;
+  --st-bg: #efe3cf;
+  --st-card: #f4ecdd;
+  --st-fg: #2c231c;
+  --st-primary: #c75b39;
+  --st-primary-fg: #f4ecdd;
+  --st-secondary: #8e9c77;
+  --st-muted: #e3d4ba;
+  --st-muted-fg: #7c5a3a;
+  --st-accent: #d9a441;
+  --st-peach: #f4d9c8;
+  --st-destructive: #a94631;
+  --st-input: #c7b59a;
+
+  /* `mint` and `lavender` are separate tokens in the prototype that resolve to
+     these same two values — kept as aliases so screen code reads like the
+     source it was ported from. */
+  --st-mint: var(--st-secondary);
+  --st-lavender: var(--st-accent);
+
+  --persona: var(--st-primary);
+  --persona-foreground: var(--st-primary-fg);
+  --persona-soft: var(--st-peach);
+  --persona-border: var(--st-fg);
+  --primary: var(--st-primary);
+  --primary-foreground: var(--st-primary-fg);
+  --ring: var(--st-fg);
+  --radius: 2px;
+}
+
+@theme inline {
+  --color-st-bg: var(--st-bg);
+  --color-st-card: var(--st-card);
+  --color-st-fg: var(--st-fg);
+  --color-st-primary: var(--st-primary);
+  --color-st-primary-fg: var(--st-primary-fg);
+  --color-st-secondary: var(--st-secondary);
+  --color-st-muted: var(--st-muted);
+  --color-st-muted-fg: var(--st-muted-fg);
+  --color-st-accent: var(--st-accent);
+  --color-st-peach: var(--st-peach);
+  --color-st-destructive: var(--st-destructive);
+  --color-st-input: var(--st-input);
+  --color-st-mint: var(--st-mint);
+  --color-st-lavender: var(--st-lavender);
+}
+
+@layer components {
+  /* The prototype's `tile`: 2px border, radius 2, hard 3px offset shadow. */
+  .st-tile {
+    border-width: 2px;
+    border-color: var(--st-fg);
+    border-radius: 2px;
+    box-shadow: 3px 3px 0 0 var(--st-fg);
+  }
+
+  /* Uppercase monospace micro-label — the prototype's `mono` style. */
+  .st-mono {
+    font-family: var(--font-st-mono);
+    font-size: 10px;
+    letter-spacing: 0.25px;
+    line-height: 1.35;
+  }
+
+  .st-display {
+    font-family: var(--font-st-display);
+    font-weight: 900;
+  }
 }
 
 [data-persona="teacher"] {

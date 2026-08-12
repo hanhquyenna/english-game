@@ -1,9 +1,19 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Award, FileText } from "lucide-react";
 import { getClassForStudent, getTopicsWithProgress } from "@/lib/queries";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { Segmented } from "@/components/student/segmented";
+import { StreakTile } from "@/components/student/streak-tile";
+import {
+  Mono,
+  PageIntro,
+  PageTitle,
+  StatusChip,
+  Tile,
+} from "@/components/student/ui";
 import { formatDate } from "@/lib/format";
+import { isoDate } from "@/lib/progression";
 
 export const dynamic = "force-dynamic";
 
@@ -12,16 +22,15 @@ type Row = {
   detail: string;
   status: "DONE" | "PENDING" | "UPCOMING";
   href?: string;
-  square: boolean;
-  tagBg: string;
+  isExam: boolean;
+  tint: string;
 };
 
-const STATUS_STYLE = {
-  DONE: { color: "#2f8a3f", bg: "#e6f9ea" },
-  PENDING: { color: "#c9820a", bg: "#fff2df" },
-  UPCOMING: { color: "#534ab7", bg: "#f4f1ff" },
-} as const;
-
+/**
+ * Challenges, ported from the prototype's ChallengesScreen: page title, intro,
+ * dismissible accent notification tile, segmented control, then 78px rows with
+ * a 42px tinted icon square and a status chip.
+ */
 export default async function ChallengesPage({
   params,
   searchParams,
@@ -37,20 +46,26 @@ export default async function ChallengesPage({
   const topics = await getTopicsWithProgress(klass.id, studentId);
   const assigned = topics.filter((t) => t.assigned_at);
 
-  const [{ data: exams }, { data: submissions }] = await Promise.all([
-    db
-      .from("exams")
-      .select("*")
-      .eq("class_id", klass.id)
-      .order("created_at", { ascending: false }),
-    db.from("submissions").select("*").eq("student_id", studentId),
-  ]);
+  const [{ data: exams }, { data: submissions }, { data: today }] =
+    await Promise.all([
+      db
+        .from("exams")
+        .select("*")
+        .eq("class_id", klass.id)
+        .order("created_at", { ascending: false }),
+      db.from("submissions").select("*").eq("student_id", studentId),
+      db
+        .from("xp_events")
+        .select("xp")
+        .eq("student_id", studentId)
+        .eq("date", isoDate())
+        .maybeSingle(),
+    ]);
 
   const submissionByExam = new Map(
     (submissions ?? []).map((s) => [s.exam_id, s]),
   );
 
-  // "Homework" is the work the teacher has assigned: units to finish.
   const homework: Row[] = assigned.map((t) => ({
     title: t.title,
     detail:
@@ -59,8 +74,9 @@ export default async function ChallengesPage({
         : `${t.percentComplete}% complete`,
     status: t.percentComplete >= 100 ? "DONE" : "PENDING",
     href: `/student/${studentId}/practice/${t.id}`,
-    square: true,
-    tagBg: t.percentComplete >= 100 ? "#58c96a" : "#ffd54a",
+    isExam: false,
+    tint:
+      t.percentComplete >= 100 ? "var(--st-mint)" : "var(--st-accent)",
   }));
 
   const examRows: Row[] = (exams ?? []).map((e) => {
@@ -70,17 +86,17 @@ export default async function ChallengesPage({
         title: e.title,
         detail: `Completed · ${Math.round(Number(sub.score))}%`,
         status: "DONE",
-        square: true,
-        tagBg: "#58c96a",
+        isExam: true,
+        tint: "var(--st-mint)",
       };
     }
     if (sub) {
       return {
         title: e.title,
-        detail: "Submitted · waiting for your teacher to mark it",
+        detail: "Submitted · waiting to be marked",
         status: "PENDING",
-        square: true,
-        tagBg: "#ffd54a",
+        isExam: true,
+        tint: "var(--st-peach)",
       };
     }
     return {
@@ -89,18 +105,20 @@ export default async function ChallengesPage({
         ? `Open since ${formatDate(e.published_at)}`
         : "Not published yet",
       status: "UPCOMING",
-      square: true,
-      tagBg: "#534ab7",
+      isExam: true,
+      tint: "var(--st-primary)",
     };
   });
 
   const rows = active === "exam" ? examRows : homework;
+  const practisedToday = Number(today?.xp ?? 0) > 0;
 
   return (
-    <div>
-      <h1 className="px-4 pt-4 font-display text-xl font-extrabold text-[#2a2540]">
-        Challenges
-      </h1>
+    <div className="px-5 pb-[30px] pt-[18px]">
+      <PageTitle>Challenges</PageTitle>
+      <PageIntro>Homework and exams, all in one place.</PageIntro>
+
+      {!practisedToday ? <StreakTile /> : null}
 
       <Segmented
         basePath={`/student/${studentId}/challenges`}
@@ -112,55 +130,53 @@ export default async function ChallengesPage({
       />
 
       {rows.length === 0 ? (
-        <p className="px-5 py-10 text-center text-sm text-[#8b83c4]">
+        <Mono className="block py-8 text-center text-st-muted-fg">
           {active === "exam"
-            ? "No exams yet. Your teacher will publish one when the unit is ready."
+            ? "No exams yet — your teacher will publish one when a unit is ready."
             : "No homework assigned yet."}
-        </p>
+        </Mono>
       ) : (
-        <ul className="space-y-2.5 px-4 pb-4">
-          {rows.map((row, i) => {
-            const style = STATUS_STYLE[row.status];
-            const inner = (
-              <span className="flex items-center gap-3 rounded-xl border border-[#ece8fb] bg-white px-3.5 py-3">
-                <span
-                  aria-hidden
-                  className="size-9 shrink-0"
-                  style={{
-                    background: row.tagBg,
-                    borderRadius: row.square ? 6 : "50%",
-                  }}
-                />
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[14px] font-bold text-[#2a2540]">
-                    {row.title}
-                  </span>
-                  <span className="block truncate text-[12px] text-[#8b83c4]">
-                    {row.detail}
-                  </span>
-                </span>
-                <span
-                  className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-extrabold"
-                  style={{ color: style.color, background: style.bg }}
-                >
-                  {row.status}
-                </span>
-              </span>
-            );
-
-            return (
-              <li key={`${row.title}-${i}`}>
-                {row.href ? (
-                  <Link href={row.href} className="block">
-                    {inner}
-                  </Link>
+        rows.map((row, i) => {
+          const inner = (
+            <Tile
+              className="mb-2.5 flex min-h-[78px] items-center gap-3 p-[13px]"
+              style={{ backgroundColor: "var(--st-card)" }}
+            >
+              <span
+                className="flex size-[42px] shrink-0 items-center justify-center rounded-[2px]"
+                style={{ backgroundColor: row.tint }}
+                aria-hidden
+              >
+                {row.isExam ? (
+                  <Award size={19} style={{ color: "var(--st-fg)" }} />
                 ) : (
-                  inner
+                  <FileText size={19} style={{ color: "var(--st-fg)" }} />
                 )}
-              </li>
-            );
-          })}
-        </ul>
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="st-display mb-[3px] block truncate text-[14px] text-st-fg">
+                  {row.title}
+                </span>
+                <Mono className="block truncate text-st-muted-fg">
+                  {row.detail}
+                </Mono>
+              </span>
+              <StatusChip status={row.status} />
+            </Tile>
+          );
+
+          return row.href ? (
+            <Link
+              key={`${row.title}-${i}`}
+              href={row.href}
+              className="block transition-opacity active:opacity-70"
+            >
+              {inner}
+            </Link>
+          ) : (
+            <div key={`${row.title}-${i}`}>{inner}</div>
+          );
+        })
       )}
     </div>
   );

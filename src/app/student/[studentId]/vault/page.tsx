@@ -1,18 +1,25 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Archive, ArrowLeft, ChevronRight } from "lucide-react";
 import { getClassForStudent, getTopicsWithProgress } from "@/lib/queries";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { MASTERY_THRESHOLD } from "@/lib/level-engine";
+import {
+  Mono,
+  PageIntro,
+  PageTitle,
+  PageTitleSmall,
+  Tile,
+} from "@/components/student/ui";
 
 export const dynamic = "force-dynamic";
 
 /**
- * The Vault: everything the student has been taught, unit by unit.
+ * Learning Vault, ported from the prototype's VaultScreen.
  *
- * The design shows weeks; the real curriculum is organised into units, so each
- * assigned unit is one vault entry. Words and rules come straight from the
- * teacher's curriculum, and "mastered" uses the same threshold the Level
- * Engine scores against — so this screen and the level agree.
+ * The prototype groups by week; the real curriculum is organised into units, so
+ * one unit is one vault entry (`styles.vaultWeek`, 72px rows with a 44px badge).
+ * Opening one shows `styles.vaultCategory` cards of tag chips.
  */
 export default async function VaultPage({
   params,
@@ -30,7 +37,7 @@ export default async function VaultPage({
   );
   const topicIds = topics.map((t) => t.id);
 
-  const [{ data: vocab }, { data: grammar }, { data: vMastery }, { data: gMastery }] =
+  const [{ data: vocab }, { data: grammar }, { data: vMastery }] =
     await Promise.all([
       topicIds.length
         ? db.from("vocab_items").select("*").in("topic_id", topicIds)
@@ -42,158 +49,150 @@ export default async function VaultPage({
         .from("vocab_mastery")
         .select("vocab_item_id, mastery_score")
         .eq("student_id", studentId),
-      db
-        .from("grammar_mastery")
-        .select("grammar_point_id, mastery_score")
-        .eq("student_id", studentId),
     ]);
 
   const vScore = new Map(
     (vMastery ?? []).map((m) => [m.vocab_item_id, Number(m.mastery_score)]),
   );
-  const gScore = new Map(
-    (gMastery ?? []).map((m) => [m.grammar_point_id, Number(m.mastery_score)]),
-  );
 
-  const selected = typeof unit === "string" ? unit : null;
-  const openTopic = topics.find((t) => t.id === selected) ?? null;
+  const openTopic =
+    typeof unit === "string" ? topics.find((t) => t.id === unit) : null;
 
   if (openTopic) {
     const words = (vocab ?? []).filter((v) => v.topic_id === openTopic.id);
     const rules = (grammar ?? []).filter((g) => g.topic_id === openTopic.id);
 
     return (
-      <div className="px-4 py-4">
+      <div className="px-5 pb-[125px] pt-[18px]">
         <Link
           href={`/student/${studentId}/vault`}
-          className="text-[13px] font-bold text-[#8b83c4]"
+          className="mb-2 flex min-h-[36px] items-center transition-opacity active:opacity-70"
         >
-          ← Vault
+          <ArrowLeft size={19} style={{ color: "var(--st-primary)" }} />
+          <PageTitleSmall>{openTopic.title}</PageTitleSmall>
         </Link>
-        <h1 className="mt-2 font-display text-xl font-extrabold text-[#2a2540]">
-          {openTopic.title}
-        </h1>
-        <p className="text-[13px] text-[#8b83c4]">
-          {words.length} words · {rules.length} grammar rules
-        </p>
 
-        <section className="mt-4 rounded-xl border border-[#ece8fb] bg-white p-3.5">
-          <h2 className="font-display text-[15px] font-extrabold text-[#2a2540]">
-            Vocabulary
-          </h2>
-          <ul className="mt-2 space-y-1.5">
+        <Tile
+          className="mb-[14px] p-[15px]"
+          style={{ backgroundColor: "var(--st-card)" }}
+        >
+          <div className="mb-[11px] flex items-center justify-between">
+            <span className="st-display text-[14px] text-st-fg">
+              Vocabulary
+            </span>
+            <Mono className="text-st-muted-fg">{words.length} words</Mono>
+          </div>
+          <div className="flex flex-wrap gap-[7px]">
             {words.map((w) => {
-              const score = vScore.get(w.id) ?? 0;
-              const mastered = score >= MASTERY_THRESHOLD;
+              const mastered = (vScore.get(w.id) ?? 0) >= MASTERY_THRESHOLD;
               return (
-                <li
+                <span
                   key={w.id}
-                  className="flex items-baseline gap-2 text-[13px]"
+                  className="px-2.5 py-[7px]"
+                  style={{
+                    backgroundColor: mastered
+                      ? "var(--st-mint)"
+                      : "var(--st-lavender)",
+                  }}
+                  title={`${w.term} — ${w.meaning}${mastered ? " · mastered" : ""}`}
                 >
-                  <span className="font-bold text-[#2a2540]">{w.term}</span>
-                  <span className="min-w-0 flex-1 truncate text-[#8b83c4]">
-                    {w.meaning}
-                  </span>
-                  <span
-                    className="shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-extrabold"
+                  <Mono
                     style={{
-                      background: mastered ? "#e6f9ea" : "#f1efee",
-                      color: mastered ? "#2f8a3f" : "#a9a3cf",
+                      color: mastered ? "var(--st-fg)" : "var(--st-primary)",
                     }}
                   >
-                    {mastered ? "mastered" : `${score}/100`}
-                  </span>
-                </li>
+                    {w.term}
+                  </Mono>
+                </span>
               );
             })}
-          </ul>
-        </section>
+          </div>
+        </Tile>
 
-        <section className="mt-3 rounded-xl border border-[#ece8fb] bg-white p-3.5">
-          <h2 className="font-display text-[15px] font-extrabold text-[#2a2540]">
-            Grammar
-          </h2>
-          <ul className="mt-2 space-y-2.5">
-            {rules.map((g) => {
-              const score = gScore.get(g.id) ?? 0;
-              const mastered = score >= MASTERY_THRESHOLD;
-              return (
-                <li key={g.id}>
-                  <p className="flex items-center gap-2 text-[13px] font-bold text-[#2a2540]">
-                    {g.name}
-                    <span
-                      className="rounded-full px-1.5 py-0.5 text-[10px] font-extrabold"
-                      style={{
-                        background: mastered ? "#e6f9ea" : "#f1efee",
-                        color: mastered ? "#2f8a3f" : "#a9a3cf",
-                      }}
-                    >
-                      {mastered ? "mastered" : `${score}/100`}
-                    </span>
-                  </p>
-                  <p className="mt-0.5 text-[12px] leading-snug text-[#8b83c4]">
-                    {g.explanation}
-                  </p>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
+        <Tile
+          className="mb-[14px] p-[15px]"
+          style={{ backgroundColor: "var(--st-card)" }}
+        >
+          <div className="mb-[11px] flex items-center justify-between">
+            <span className="st-display text-[14px] text-st-fg">Grammar</span>
+            <Mono className="text-st-muted-fg">
+              {rules.length} {rules.length === 1 ? "rule" : "rules"}
+            </Mono>
+          </div>
+          <div className="flex flex-wrap gap-[7px]">
+            {rules.length === 0 ? (
+              <Mono className="text-st-muted-fg">—</Mono>
+            ) : (
+              rules.map((g) => (
+                <span
+                  key={g.id}
+                  className="px-2.5 py-[7px]"
+                  style={{ backgroundColor: "var(--st-lavender)" }}
+                  title={g.explanation}
+                >
+                  <Mono style={{ color: "var(--st-primary)" }}>{g.name}</Mono>
+                </span>
+              ))
+            )}
+          </div>
+        </Tile>
       </div>
     );
   }
 
   return (
-    <div className="px-4 py-4">
-      <h1 className="font-display text-xl font-extrabold text-[#2a2540]">
-        Vault
-      </h1>
-      <p className="text-[13px] text-[#8b83c4]">
-        Every word and rule you&rsquo;ve been taught, unit by unit.
-      </p>
+    <div className="px-5 pb-[125px] pt-[18px]">
+      <div className="flex items-center gap-2.5">
+        <span
+          className="flex size-[34px] items-center justify-center rounded-[2px]"
+          style={{ backgroundColor: "var(--st-fg)" }}
+          aria-hidden
+        >
+          <Archive size={18} style={{ color: "var(--st-primary-fg)" }} />
+        </span>
+        <PageTitle>Learning Vault</PageTitle>
+      </div>
+      <PageIntro>Everything you&rsquo;ve learned, organised unit by unit.</PageIntro>
 
       {topics.length === 0 ? (
-        <p className="py-10 text-center text-sm text-[#8b83c4]">
-          Nothing saved yet — your vault fills up as your teacher assigns units.
-        </p>
+        <Mono className="block py-8 text-center text-st-muted-fg">
+          Your vault fills up as your teacher assigns units.
+        </Mono>
       ) : (
-        <ul className="mt-3 space-y-2.5">
-          {topics.map((t, i) => {
-            const words = (vocab ?? []).filter((v) => v.topic_id === t.id);
-            const rules = (grammar ?? []).filter((g) => g.topic_id === t.id);
-            const mastered = words.filter(
-              (w) => (vScore.get(w.id) ?? 0) >= MASTERY_THRESHOLD,
-            ).length;
-
-            return (
-              <li key={t.id}>
-                <Link
-                  href={`/student/${studentId}/vault?unit=${t.id}`}
-                  className="flex items-center gap-3 rounded-xl border border-[#ece8fb] bg-white px-3.5 py-3"
-                >
-                  <span
-                    aria-hidden
-                    className="grid size-10 shrink-0 place-items-center rounded-lg bg-[#f4f1ff] font-display text-[13px] font-extrabold text-[#534ab7]"
-                  >
-                    U{i + 1}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[14px] font-bold text-[#2a2540]">
-                      {t.title}
-                    </span>
-                    <span className="block text-[12px] text-[#8b83c4]">
-                      {words.length} words · {rules.length} grammar rules ·{" "}
-                      {mastered} mastered
-                    </span>
-                  </span>
-                  <span aria-hidden className="text-[#a9a3cf]">
-                    ›
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+        topics.map((t, i) => {
+          const words = (vocab ?? []).filter((v) => v.topic_id === t.id);
+          const rules = (grammar ?? []).filter((g) => g.topic_id === t.id);
+          return (
+            <Link
+              key={t.id}
+              href={`/student/${studentId}/vault?unit=${t.id}`}
+              className="mb-2.5 flex min-h-[72px] items-center gap-3 rounded-[2px] border-2 border-st-fg p-[13px] transition-opacity active:opacity-70"
+              style={{ backgroundColor: "var(--st-card)" }}
+            >
+              <span
+                className="flex size-11 shrink-0 items-center justify-center rounded-[2px]"
+                style={{ backgroundColor: "var(--st-lavender)" }}
+                aria-hidden
+              >
+                <Mono style={{ color: "var(--st-primary)" }}>U{i + 1}</Mono>
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="st-display mb-[3px] block truncate text-[14px] text-st-fg">
+                  {t.title}
+                </span>
+                <Mono className="block text-st-muted-fg">
+                  {words.length} words · {rules.length}{" "}
+                  {rules.length === 1 ? "rule" : "rules"}
+                </Mono>
+              </span>
+              <ChevronRight
+                size={18}
+                style={{ color: "var(--st-muted-fg)" }}
+                aria-hidden
+              />
+            </Link>
+          );
+        })
       )}
     </div>
   );

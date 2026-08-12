@@ -40,6 +40,7 @@ export function StudentAvatar({
   ringWidth = 3,
   glow,
   background = "#f4f1ff",
+  shape = "circle",
   label,
   labelColor,
   className,
@@ -56,6 +57,12 @@ export function StudentAvatar({
   ringWidth?: number;
   glow?: string;
   background?: string | null;
+  /**
+   * Frame shape only — never affects the character itself. "square" is the
+   * near-square (radius 2) frame the student design uses; "circle" is the
+   * rounded frame the teacher and parent apps use.
+   */
+  shape?: "circle" | "square";
   /** Small pill under the character, e.g. the CEFR band. */
   label?: string | null;
   labelColor?: string;
@@ -81,11 +88,19 @@ export function StudentAvatar({
       <span
         className="block size-full overflow-hidden"
         style={{
-          borderRadius: isFull ? 16 : "50%",
+          borderRadius:
+            shape === "square" ? 2 : isFull ? 16 : "50%",
           background: background ?? undefined,
-          boxShadow: ring
-            ? `0 0 0 ${ringWidth}px ${ring}${glow ? `, ${glow}` : ""}`
-            : glow,
+          border:
+            shape === "square" && ring
+              ? `${ringWidth}px solid ${ring}`
+              : undefined,
+          boxShadow:
+            shape === "square"
+              ? glow
+              : ring
+                ? `0 0 0 ${ringWidth}px ${ring}${glow ? `, ${glow}` : ""}`
+                : glow,
         }}
       >
         <Peep

@@ -4,21 +4,16 @@ import {
   getIslandTopics,
   getStudentSummary,
 } from "@/lib/queries";
-import { createServerSupabase } from "@/lib/supabase/server";
 import { buildIslands, currentPosition } from "@/lib/islands";
 import { IslandBand } from "@/components/student/island-band";
-import { StreakNotice } from "@/components/student/streak-notice";
-import { isoDate } from "@/lib/progression";
+import { Mono, ProgressTrack, Tile } from "@/components/student/ui";
 
 export const dynamic = "force-dynamic";
 
-/** Scenery palette per island position, from the design prototype. */
-const ISLAND_THEMES = [
-  { bandBg: "#e9f2e4", iconBg: "#5a9f4f", ground: "#cfe6c4" },
-  { bandBg: "#e6eef6", iconBg: "#3d6fe0", ground: "#cddcee" },
-  { bandBg: "#efe9f6", iconBg: "#8f7fd6", ground: "#ded4ef" },
-];
-
+/**
+ * Learn / path screen, ported from the prototype's PathScreen: a primary-filled
+ * level card (`styles.levelCard`) followed by one tile per island.
+ */
 export default async function LearnPage({
   params,
 }: PageProps<"/student/[studentId]">) {
@@ -33,43 +28,53 @@ export default async function LearnPage({
   const topics = klass ? await getIslandTopics(klass.id, studentId) : [];
   const islands = buildIslands(topics);
   const here = currentPosition(islands);
-
-  // The streak banner is a real warning, not decoration: it only shows when
-  // today genuinely has no practice logged yet and a streak is on the line.
-  const db = createServerSupabase();
-  const { data: today } = await db
-    .from("xp_events")
-    .select("xp")
-    .eq("student_id", studentId)
-    .eq("date", isoDate())
-    .maybeSingle();
-
-  const practisedToday = Number(today?.xp ?? 0) > 0;
-  const streakAtRisk = !practisedToday && student.streak > 0;
+  const level = student.level;
 
   return (
-    <div>
-      {streakAtRisk ? <StreakNotice streak={student.streak} /> : null}
+    <div className="pb-6">
+      <Tile
+        className="mx-4 mt-4 p-4"
+        style={{ backgroundColor: "var(--st-primary)" }}
+      >
+        <div className="flex items-center justify-between">
+          <span className="st-display text-[24px] text-st-primary-fg">
+            {level?.cefrBand ?? "—"}
+          </span>
+          <Mono className="font-bold text-st-primary-fg">
+            {level
+              ? level.nextBand
+                ? `${level.progressToNextBand}% to ${level.nextBand}`
+                : "Top band reached"
+              : "No level yet"}
+          </Mono>
+        </div>
+        <ProgressTrack
+          className="mt-2.5"
+          percent={level?.progressToNextBand ?? 0}
+          trackColor="rgba(244,236,221,0.3)"
+          fillColor="var(--st-accent)"
+        />
+        <Mono className="mt-2.5 block text-st-primary-fg">
+          Your learning path · keep moving forward
+        </Mono>
+      </Tile>
 
       {islands.length === 0 ? (
-        <div className="px-5 py-16 text-center">
-          <p className="text-4xl" aria-hidden>
-            🌱
-          </p>
-          <p className="mt-3 font-display text-lg font-extrabold text-[#2a2540]">
-            No lessons yet
-          </p>
-          <p className="mt-1 text-sm text-[#8b83c4]">
+        <Tile
+          className="mx-4 mt-5 p-6 text-center"
+          style={{ backgroundColor: "var(--st-card)" }}
+        >
+          <p className="st-display text-[17px] text-st-fg">No lessons yet</p>
+          <Mono className="mt-2 block text-st-muted-fg">
             When your teacher assigns a unit, it appears here straight away.
-          </p>
-        </div>
+          </Mono>
+        </Tile>
       ) : (
         islands.map((island, i) => (
           <IslandBand
             key={island.topicId}
             studentId={studentId}
             island={island}
-            theme={ISLAND_THEMES[i % ISLAND_THEMES.length]}
             index={i}
             here={here}
             seed={student.avatarSeed}
@@ -77,8 +82,6 @@ export default async function LearnPage({
           />
         ))
       )}
-
-      <div className="h-5" />
     </div>
   );
 }

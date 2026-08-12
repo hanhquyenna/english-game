@@ -1,24 +1,35 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
+import {
+  ArrowLeft,
+  Award,
+  Circle,
+  Gem,
+  Scissors,
+  Smile,
+  Square,
+} from "lucide-react";
 import { StudentAvatar } from "@/components/student-avatar";
 import { buyItem, setPeepOverride, toggleItem } from "@/lib/actions/avatar";
+import { Mono, PageTitleSmall } from "@/components/student/ui";
 import { ITEM_COLORS, type EquippedItem, type PeepConfig } from "@/lib/peeps";
-import { cn } from "@/lib/utils";
 
 /**
- * The avatar shop.
+ * Avatar Shop, ported from the prototype's ShopScreen: back row with a gem
+ * counter, a 132px bordered avatar stage, a scrolling row of icon+label tabs
+ * (`styles.shopTab`), then either a 2-up hat grid or a row of option cards.
  *
- * Appearance tabs (Hair, Face, Clothes, Stance) write straight to the
- * character and are free — they are self-expression, not a paywall. The Hats
- * tab is the only place gems are spent.
+ * Appearance tabs write straight to the character and are free. Hats are the
+ * only place gems are spent.
  *
- * Note on "Stance": the design's fifth tab was "Shoes". Open Peeps has no
- * separately colourable shoe layer, so rather than ship a control that looks
- * like it does something and doesn't, this tab picks the full-body stance —
- * which genuinely changes the outfit and footwear shown in the preview.
+ * The prototype's fifth tab is "Shoes"; Open Peeps exposes no separately
+ * colourable shoe layer, so this one picks the full-body stance — which does
+ * visibly change the outfit and footwear in the preview — and is labelled for
+ * what it actually does.
  */
 
 type Hat = {
@@ -33,12 +44,12 @@ type Hat = {
 
 type TabKey = "hair" | "face" | "hat" | "clothes" | "stance";
 
-const TABS: { key: TabKey; label: string }[] = [
-  { key: "hair", label: "Hair" },
-  { key: "face", label: "Face" },
-  { key: "hat", label: "Hats" },
-  { key: "clothes", label: "Clothes" },
-  { key: "stance", label: "Stance" },
+const TABS: { key: TabKey; label: string; Icon: typeof Scissors }[] = [
+  { key: "hair", label: "Hair", Icon: Scissors },
+  { key: "face", label: "Face", Icon: Smile },
+  { key: "hat", label: "Hats", Icon: Award },
+  { key: "clothes", label: "Clothes", Icon: Circle },
+  { key: "stance", label: "Stance", Icon: Square },
 ];
 
 const FIELD_FOR: Record<Exclude<TabKey, "hat">, keyof PeepConfig> = {
@@ -71,7 +82,6 @@ export function ShopClient({
   const [tab, setTab] = useState<TabKey>(
     (TABS.find((t) => t.key === activeTab)?.key ?? "hair") as TabKey,
   );
-  // Optimistic preview so tapping an option updates the character instantly.
   const [preview, setPreview] = useState<Partial<PeepConfig>>(overrides);
   const [pending, start] = useTransition();
 
@@ -87,143 +97,178 @@ export function ShopClient({
     });
   }
 
-  const showFullBody = tab === "stance" || tab === "clothes";
+  const fullBody = tab === "stance" || tab === "clothes";
 
   return (
-    <div>
-      <div className="mt-2 flex items-center justify-between">
-        <h1 className="font-display text-xl font-extrabold text-[#2a2540]">
-          Avatar shop
-        </h1>
-        <span className="flex items-center gap-1.5 rounded-full border-[1.5px] border-[#ece8fb] px-3 py-1.5">
-          <span
-            aria-hidden
-            className="size-4 bg-[#3d6fe0]"
-            style={{
-              clipPath: "polygon(50% 0%,100% 38%,80% 100%,20% 100%,0% 38%)",
-            }}
-          />
-          <span className="font-display text-[15px] font-extrabold text-[#3a3550]">
-            {gems}
-          </span>
+    <div className="px-5 pb-[30px] pt-[18px]">
+      <div className="mb-2 flex min-h-[36px] items-center">
+        <Link
+          href={`/student/${studentId}/profile`}
+          aria-label="Back to profile"
+          className="transition-opacity active:opacity-70"
+        >
+          <ArrowLeft size={19} style={{ color: "var(--st-primary)" }} />
+        </Link>
+        <PageTitleSmall>Avatar Shop</PageTitleSmall>
+        <span className="flex-1" />
+        <span
+          className="flex min-h-[34px] items-center gap-[5px] rounded-[2px] border-2 border-st-fg px-[9px]"
+          style={{ backgroundColor: "var(--st-card)" }}
+        >
+          <Gem size={15} style={{ color: "var(--st-primary)" }} aria-hidden />
+          <span className="text-[14px] font-black text-st-fg">{gems}</span>
         </span>
       </div>
 
-      <div className="mt-3 flex justify-center rounded-2xl bg-[#f4f1ff] py-5">
-        <StudentAvatar
-          seed={seed}
-          overrides={preview}
-          items={items}
-          size={showFullBody ? 210 : 130}
-          variant={showFullBody ? "full" : "bust"}
-          ring={showFullBody ? null : "#d3caf7"}
-          background={showFullBody ? null : "#fff"}
-        />
+      <div className="flex items-center justify-center py-[17px]">
+        <span
+          className="relative flex items-center justify-center rounded-[2px] border-2"
+          style={{
+            width: 132,
+            height: fullBody ? 190 : 132,
+            backgroundColor: "var(--st-card)",
+            borderColor: "var(--st-primary)",
+          }}
+        >
+          <StudentAvatar
+            seed={seed}
+            overrides={preview}
+            items={items}
+            size={fullBody ? 170 : 106}
+            variant={fullBody ? "full" : "bust"}
+            shape="square"
+            ring={null}
+            background={null}
+          />
+        </span>
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-2">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            onClick={() => setTab(t.key)}
-            className="rounded-full border px-3.5 py-1.5 text-[13px] font-bold transition-colors"
-            style={{
-              background: tab === t.key ? "#534ab7" : "#fff",
-              color: tab === t.key ? "#fff" : "#8b83c4",
-              borderColor: tab === t.key ? "#534ab7" : "#ece8fb",
-            }}
-          >
-            {t.label}
-          </button>
-        ))}
+      <div className="flex gap-[7px] overflow-x-auto pb-[17px]">
+        {TABS.map((t) => {
+          const on = tab === t.key;
+          return (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setTab(t.key)}
+              className="flex min-h-[35px] shrink-0 items-center gap-[5px] rounded-[2px] border-2 border-st-fg px-[11px] transition-opacity active:opacity-70"
+              style={{
+                backgroundColor: on ? "var(--st-primary)" : "var(--st-card)",
+              }}
+            >
+              <t.Icon
+                size={14}
+                aria-hidden
+                style={{
+                  color: on ? "var(--st-primary-fg)" : "var(--st-muted-fg)",
+                }}
+              />
+              <Mono
+                style={{
+                  color: on ? "var(--st-primary-fg)" : "var(--st-muted-fg)",
+                }}
+              >
+                {t.label}
+              </Mono>
+            </button>
+          );
+        })}
       </div>
 
       {tab === "hat" ? (
-        <ul className="mt-4 grid grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-2 gap-3">
           {hats.map((hat) => (
-            <li key={hat.id}>
-              <button
-                type="button"
-                disabled={pending}
-                onClick={() =>
-                  start(async () => {
-                    try {
-                      if (!hat.owned) {
-                        await buyItem(studentId, hat.id);
-                        toast.success(`${hat.label} unlocked!`);
-                      } else {
-                        await toggleItem(studentId, hat.id);
-                      }
-                      router.refresh();
-                    } catch (e) {
-                      toast.error(
-                        e instanceof Error ? e.message : "Could not do that",
-                      );
+            <button
+              key={hat.id}
+              type="button"
+              disabled={pending}
+              onClick={() =>
+                start(async () => {
+                  try {
+                    if (!hat.owned) {
+                      await buyItem(studentId, hat.id);
+                      toast.success(`${hat.label} unlocked!`);
+                    } else {
+                      await toggleItem(studentId, hat.id);
                     }
-                  })
-                }
-                className={cn(
-                  "flex w-full flex-col items-center gap-1.5 rounded-2xl border-2 p-3.5 transition-colors",
-                  hat.equipped
-                    ? "border-[#58c96a] bg-[#f2fbf4]"
-                    : hat.owned
-                      ? "border-[#ece8fb] bg-white"
-                      : "border-dashed border-[#ded9f5] bg-[#faf9ff]",
-                )}
+                    router.refresh();
+                  } catch (e) {
+                    toast.error(
+                      e instanceof Error ? e.message : "Could not do that",
+                    );
+                  }
+                })
+              }
+              className="flex flex-col items-center gap-[7px] rounded-[2px] border-2 p-3 transition-opacity active:opacity-70"
+              style={{
+                backgroundColor: "var(--st-card)",
+                borderColor: hat.equipped
+                  ? "var(--st-secondary)"
+                  : "var(--st-fg)",
+              }}
+            >
+              <span
+                className="flex size-16 items-center justify-center rounded-[2px]"
+                style={{ backgroundColor: "var(--st-fg)" }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={`/assets/items/${hat.icon}.svg`}
                   alt=""
-                  className="size-9"
-                  style={{ color: ITEM_COLORS[hat.icon] ?? "#534ab7" }}
+                  className="size-[26px]"
+                  style={{ color: ITEM_COLORS[hat.icon] ?? "var(--st-accent)" }}
                 />
-                <span className="text-[12.5px] font-bold text-[#2a2540]">
-                  {hat.label}
-                </span>
-                <span className="text-[11px] font-bold text-[#8b83c4]">
-                  {hat.equipped
-                    ? "Wearing"
-                    : hat.owned
-                      ? "Tap to wear"
-                      : hat.cost === 0
-                        ? "Free"
-                        : `💎 ${hat.cost}`}
-                </span>
-              </button>
-            </li>
+              </span>
+              <Mono className="text-st-fg">{hat.label}</Mono>
+              <Mono
+                style={{
+                  color: hat.owned
+                    ? "var(--st-secondary)"
+                    : "var(--st-primary)",
+                }}
+              >
+                {hat.equipped
+                  ? "Equipped"
+                  : hat.owned
+                    ? "Owned"
+                    : hat.cost === 0
+                      ? "Free"
+                      : `${hat.cost} gems`}
+              </Mono>
+            </button>
           ))}
-        </ul>
+        </div>
       ) : (
-        <ul className="mt-4 grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 gap-2.5">
           {(options[tab] ?? []).map((value) => {
             const field = FIELD_FOR[tab as Exclude<TabKey, "hat">];
             const on = (preview[field] ?? "") === value;
             return (
-              <li key={value}>
-                <button
-                  type="button"
-                  disabled={pending}
-                  onClick={() => choose(field, value)}
-                  title={value}
-                  className={cn(
-                    "grid w-full place-items-center rounded-xl border-2 p-1 transition-colors",
-                    on ? "border-[#58c96a] bg-[#f2fbf4]" : "border-[#ece8fb] bg-white",
-                  )}
-                >
-                  <StudentAvatar
-                    seed={seed}
-                    overrides={{ ...preview, [field]: value }}
-                    size={tab === "stance" ? 74 : 56}
-                    variant={tab === "stance" ? "full" : "bust"}
-                    background={tab === "stance" ? null : "#f7f6fb"}
-                  />
-                </button>
-              </li>
+              <button
+                key={value}
+                type="button"
+                disabled={pending}
+                onClick={() => choose(field, value)}
+                title={value}
+                className="flex flex-col items-center gap-[7px] rounded-[2px] border-2 p-2.5 transition-opacity active:opacity-70"
+                style={{
+                  backgroundColor: "var(--st-card)",
+                  borderColor: on ? "var(--st-secondary)" : "var(--st-fg)",
+                }}
+              >
+                <StudentAvatar
+                  seed={seed}
+                  overrides={{ ...preview, [field]: value }}
+                  size={tab === "stance" ? 76 : 58}
+                  variant={tab === "stance" ? "full" : "bust"}
+                  shape="square"
+                  ring={null}
+                  background="var(--st-peach)"
+                />
+              </button>
             );
           })}
-        </ul>
+        </div>
       )}
     </div>
   );

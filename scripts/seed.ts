@@ -201,7 +201,7 @@ const PRACTICE: Array<
     {
       type: "MATCHING",
       content: {
-        instructions: "Nối từ với nghĩa tiếng Việt.",
+        instructions: "Match each word to its meaning.",
         pairs: [
           { left: "greet", right: "chào hỏi" },
           { left: "polite", right: "lịch sự" },
@@ -263,7 +263,7 @@ const PRACTICE: Array<
     {
       type: "MATCHING",
       content: {
-        instructions: "Nối từ với nghĩa tiếng Việt.",
+        instructions: "Match each word to its meaning.",
         pairs: [
           { left: "sibling", right: "anh chị em ruột" },
           { left: "strict", right: "nghiêm khắc" },
@@ -325,7 +325,7 @@ const PRACTICE: Array<
     {
       type: "MATCHING",
       content: {
-        instructions: "Nối từ với nghĩa tiếng Việt.",
+        instructions: "Match each word to its meaning.",
         pairs: [
           { left: "commute", right: "đi lại hằng ngày" },
           { left: "chore", right: "việc vặt trong nhà" },

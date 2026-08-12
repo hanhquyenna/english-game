@@ -1,18 +1,28 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { ArrowLeft, CheckCircle, ChevronRight, RefreshCw } from "lucide-react";
 import { StudentAvatar } from "@/components/student-avatar";
 import { applyAvatarSeed, rollAvatarOptions } from "@/lib/actions/avatar";
+import {
+  Mono,
+  OutlineButton,
+  PageIntro,
+  PageTitleSmall,
+} from "@/components/student/ui";
 import type { PeepConfig } from "@/lib/peeps";
-import { cn } from "@/lib/utils";
 
 /**
- * Three fresh characters to choose from, with a reroll — the design's picker.
+ * Avatar picker, ported from the prototype's AvatarPickerScreen: back row,
+ * intro line, then 88px option rows (`styles.avatarOption`) each holding a
+ * 62px avatar, a title, a caption and a trailing check/chevron. A reroll
+ * button sits underneath.
  *
- * The student's existing character is only replaced when they confirm a choice,
- * so backing out leaves them exactly as they were.
+ * The characters are our real Open Peeps, not the prototype's initials circle.
+ * Picking one only takes effect on confirm, so backing out changes nothing.
  */
 export function AvatarPicker({
   studentId,
@@ -42,92 +52,119 @@ export function AvatarPicker({
   }, []);
 
   return (
-    <div>
-      <h1 className="mt-2 font-display text-xl font-extrabold text-[#2a2540]">
-        Choose your character
-      </h1>
-      <p className="text-[13px] text-[#8b83c4]">
-        Your character stays the same everywhere — on your profile, the ranking
-        and your teacher&rsquo;s screen.
-      </p>
+    <div className="px-5 pb-[30px] pt-[18px]">
+      <Link
+        href={`/student/${studentId}/profile`}
+        className="mb-2 flex min-h-[36px] items-center transition-opacity active:opacity-70"
+      >
+        <ArrowLeft size={19} style={{ color: "var(--st-primary)" }} />
+        <PageTitleSmall>Choose your avatar</PageTitleSmall>
+      </Link>
+      <PageIntro>Three fresh options — reroll anytime.</PageIntro>
 
-      <div className="mt-4 rounded-2xl border border-[#ece8fb] bg-white p-4">
-        <p className="text-[11px] font-bold uppercase tracking-wide text-[#a9a3cf]">
-          Wearing now
-        </p>
-        <div className="mt-2 flex justify-center">
-          <StudentAvatar
-            seed={currentSeed}
-            overrides={currentOverrides}
-            size={96}
-            ring="#d3caf7"
-          />
-        </div>
+      <div className="mb-4 flex items-center gap-3">
+        <StudentAvatar
+          seed={currentSeed}
+          overrides={currentOverrides}
+          size={48}
+          shape="square"
+          ring="var(--st-fg)"
+          ringWidth={2}
+          background="var(--st-peach)"
+        />
+        <Mono className="text-st-muted-fg">Wearing now</Mono>
       </div>
 
-      <ul className="mt-4 grid grid-cols-3 gap-2.5">
-        {loading
-          ? [0, 1, 2].map((i) => (
-              <li
-                key={i}
-                className="grid h-32 place-items-center rounded-2xl border-2 border-[#ece8fb] bg-[#faf9ff] text-[#c9c3e6]"
+      {loading
+        ? [0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="mt-[11px] flex min-h-[88px] items-center rounded-[2px] border-2 p-3"
+              style={{
+                backgroundColor: "var(--st-card)",
+                borderColor: "var(--st-input)",
+              }}
+            >
+              <Mono className="text-st-muted-fg">Loading…</Mono>
+            </div>
+          ))
+        : options.map((seed, i) => {
+            const on = chosen === seed;
+            return (
+              <button
+                key={seed}
+                type="button"
+                onClick={() => setChosen(seed)}
+                className="mt-[11px] flex min-h-[88px] w-full items-center gap-[13px] rounded-[2px] border-2 p-3 text-left transition-opacity active:opacity-70"
+                style={{
+                  backgroundColor: "var(--st-card)",
+                  borderColor: on ? "var(--st-secondary)" : "var(--st-fg)",
+                }}
               >
-                …
-              </li>
-            ))
-          : options.map((seed, i) => (
-              <li key={seed}>
-                <button
-                  type="button"
-                  onClick={() => setChosen(seed)}
-                  className={cn(
-                    "flex w-full flex-col items-center gap-1.5 rounded-2xl border-2 p-2.5 transition-colors",
-                    chosen === seed
-                      ? "border-[#58c96a] bg-[#f2fbf4]"
-                      : "border-[#ece8fb] bg-white",
-                  )}
-                >
-                  <StudentAvatar seed={seed} size={72} background="#f7f6fb" />
-                  <span className="text-[11.5px] font-bold text-[#8b83c4]">
+                <StudentAvatar
+                  seed={seed}
+                  size={62}
+                  shape="square"
+                  ring={on ? "var(--st-secondary)" : "var(--st-fg)"}
+                  ringWidth={2}
+                  background="var(--st-peach)"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="st-display mb-1 block text-[16px] text-st-fg">
                     Option {i + 1}
                   </span>
-                </button>
-              </li>
-            ))}
-      </ul>
+                  <Mono className="block text-st-muted-fg">
+                    A new look for your learning journey
+                  </Mono>
+                </span>
+                {on ? (
+                  <CheckCircle
+                    size={20}
+                    style={{ color: "var(--st-secondary)" }}
+                    aria-hidden
+                  />
+                ) : (
+                  <ChevronRight
+                    size={20}
+                    style={{ color: "var(--st-muted-fg)" }}
+                    aria-hidden
+                  />
+                )}
+              </button>
+            );
+          })}
 
-      <div className="mt-4 flex gap-2">
-        <button
-          type="button"
-          onClick={() => void roll()}
-          disabled={loading || pending}
-          className="flex-1 rounded-xl border border-[#ece8fb] py-3 text-[13px] font-bold text-[#534ab7] disabled:opacity-50"
-        >
-          🎲 Show me three more
-        </button>
-        <button
-          type="button"
-          disabled={!chosen || pending}
-          onClick={() =>
-            start(async () => {
-              try {
-                await applyAvatarSeed(studentId, chosen!);
-                toast.success("That's you now!");
-                router.push(`/student/${studentId}/profile`);
-              } catch (e) {
-                toast.error(e instanceof Error ? e.message : "Could not save");
-              }
-            })
-          }
-          className="flex-1 rounded-xl bg-[#534ab7] py-3 text-[13px] font-bold text-white disabled:opacity-40"
-        >
-          {pending ? "Saving…" : "Use this one"}
-        </button>
-      </div>
+      <OutlineButton onClick={() => void roll()} disabled={loading || pending}>
+        <RefreshCw size={17} aria-hidden />
+        Reroll avatars
+      </OutlineButton>
 
-      <p className="mt-2 text-center text-[11.5px] text-[#a9a3cf]">
+      <button
+        type="button"
+        disabled={!chosen || pending}
+        onClick={() =>
+          start(async () => {
+            try {
+              await applyAvatarSeed(studentId, chosen!);
+              toast.success("That's you now!");
+              router.push(`/student/${studentId}/profile`);
+            } catch (e) {
+              toast.error(e instanceof Error ? e.message : "Could not save");
+            }
+          })
+        }
+        className="st-mono mt-[11px] flex min-h-[50px] w-full items-center justify-center rounded-[2px] text-[12px] font-black uppercase tracking-[0.6px] transition-opacity active:opacity-70 disabled:opacity-40"
+        style={{
+          backgroundColor: "var(--st-primary)",
+          color: "var(--st-primary-fg)",
+        }}
+      >
+        {pending ? "Saving…" : "Use this one"}
+      </button>
+
+      <Mono className="mt-2 block text-center text-st-muted-fg">
         Picking a new character resets shop changes like hair and clothes.
-      </p>
+      </Mono>
     </div>
   );
 }

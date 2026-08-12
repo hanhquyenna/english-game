@@ -6,7 +6,7 @@ import { buildLessonPath } from "@/lib/lesson-path";
 import { buildRound } from "@/lib/practice";
 import { sliceForLevel } from "@/lib/islands";
 import { PracticeSession } from "@/components/student/practice-session";
-import { Card, CardContent } from "@/components/ui/card";
+import { Mono, Tile } from "@/components/student/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -29,24 +29,21 @@ export default async function PracticePage({
   // rendering an empty session.
   if (!node || node.state === "LOCKED") {
     return (
-      <Card>
-        <CardContent className="space-y-3 py-8 text-center">
-          <p className="text-4xl" aria-hidden>
-            🔒
-          </p>
-          <p className="font-medium">This lesson is locked</p>
-          <p className="text-sm text-muted-foreground">
-            {node?.lockedReason ?? "Your teacher has not assigned this unit yet."}
-          </p>
-          <Link
-            href={`/student/${studentId}`}
-            className="inline-block underline"
-            style={{ color: "var(--persona)" }}
-          >
-            ← Back to your path
-          </Link>
-        </CardContent>
-      </Card>
+      <Tile
+        className="m-5 p-6 text-center"
+        style={{ backgroundColor: "var(--st-card)" }}
+      >
+        <p className="st-display text-[17px] text-st-fg">This lesson is locked</p>
+        <Mono className="mt-2 block text-st-muted-fg">
+          {node?.lockedReason ?? "Your teacher has not assigned this unit yet."}
+        </Mono>
+        <Link
+          href={`/student/${studentId}`}
+          className="st-mono mt-4 inline-block font-black uppercase tracking-[0.6px] text-st-primary"
+        >
+          ← Back to your path
+        </Link>
+      </Tile>
     );
   }
 
@@ -80,24 +77,23 @@ export default async function PracticePage({
 
   if (round.length === 0) {
     return (
-      <Card>
-        <CardContent className="space-y-3 py-8 text-center">
-          <p className="text-4xl" aria-hidden>
-            📭
-          </p>
-          <p className="font-medium">No exercises in this lesson yet</p>
-          <p className="text-sm text-muted-foreground">
-            Your teacher will add some soon.
-          </p>
-          <Link
-            href={`/student/${studentId}`}
-            className="inline-block underline"
-            style={{ color: "var(--persona)" }}
-          >
-            ← Back to your path
-          </Link>
-        </CardContent>
-      </Card>
+      <Tile
+        className="m-5 p-6 text-center"
+        style={{ backgroundColor: "var(--st-card)" }}
+      >
+        <p className="st-display text-[17px] text-st-fg">
+          No exercises in this lesson yet
+        </p>
+        <Mono className="mt-2 block text-st-muted-fg">
+          Your teacher will add some soon.
+        </Mono>
+        <Link
+          href={`/student/${studentId}`}
+          className="st-mono mt-4 inline-block font-black uppercase tracking-[0.6px] text-st-primary"
+        >
+          ← Back to your path
+        </Link>
+      </Tile>
     );
   }
 

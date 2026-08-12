@@ -1,16 +1,20 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Award } from "lucide-react";
 import { getClassForStudent, getRoster } from "@/lib/queries";
 import { StudentAvatar } from "@/components/student-avatar";
 import { Segmented } from "@/components/student/segmented";
-import { tierForIndex } from "@/lib/tiers";
+import { Mono, PageTitle } from "@/components/student/ui";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Class leaderboard. "Total stars" ranks by the composite level score — the
- * same number the teacher and parent see — so the thing worth competing on is
- * the thing the product actually measures. "Day streak" ranks by persistence.
+ * Leaderboard, ported from the prototype's LeaderboardScreen: 240px podium
+ * with the winner's column flexed to 1.1 and bars of 92/70/58px, then 60px
+ * rows with a 19px rank number.
+ *
+ * "Total stars" ranks by the composite level score — the same number the
+ * teacher and parent see.
  */
 export default async function RankPage({
   params,
@@ -32,138 +36,123 @@ export default async function RankPage({
 
   const value = (s: (typeof ranked)[number]) =>
     active === "streak" ? s.streak : (s.level?.compositeScore ?? 0);
-  const unit = active === "streak" ? "days" : "pts";
 
   const podium = [ranked[1], ranked[0], ranked[2]].filter(Boolean);
+  const rest = ranked.slice(3);
 
   return (
-    <div>
-      <h1 className="px-4 pt-4 font-display text-xl font-extrabold text-[#2a2540]">
-        Class ranking
-      </h1>
+    <div className="px-5 pb-[125px] pt-[18px]">
+      <PageTitle>Leaderboard</PageTitle>
+      <div className="mt-4">
+        <Segmented
+          basePath={`/student/${studentId}/rank`}
+          active={active}
+          tabs={[
+            { key: "stars", label: "Total stars" },
+            { key: "streak", label: "Day streak" },
+          ]}
+        />
+      </div>
 
-      <Segmented
-        basePath={`/student/${studentId}/rank`}
-        active={active}
-        tabs={[
-          { key: "stars", label: "Total stars" },
-          { key: "streak", label: "Day streak" },
-        ]}
-      />
-
-      <div className="flex items-end justify-center gap-3 px-4 pb-4">
+      <div className="mb-[14px] flex h-[240px] items-end gap-2 px-[3px]">
         {podium.map((s) => {
-          const place = ranked.indexOf(s) + 1;
-          const t = tierForIndex(place - 1);
-          const height = place === 1 ? 88 : place === 2 ? 68 : 58;
+          const rank = ranked.indexOf(s) + 1;
+          const href =
+            s.id === studentId
+              ? `/student/${studentId}/profile`
+              : `/student/${studentId}/profile/${s.id}`;
           return (
             <Link
               key={s.id}
-              href={
-                s.id === studentId
-                  ? `/student/${studentId}/profile`
-                  : `/student/${studentId}/profile/${s.id}`
-              }
-              className="flex w-1/3 flex-col items-center"
+              href={href}
+              className="flex flex-col items-center gap-[3px] transition-opacity active:opacity-70"
+              style={{ flex: rank === 1 ? 1.1 : 1 }}
             >
-              {place === 1 ? (
-                <span className="mb-0.5 text-lg" aria-hidden>
-                  👑
-                </span>
-              ) : null}
+              {rank === 1 ? (
+                <Award
+                  size={17}
+                  style={{ color: "var(--st-accent)" }}
+                  aria-hidden
+                />
+              ) : (
+                <span className="h-[17px]" />
+              )}
               <StudentAvatar
                 seed={s.avatarSeed}
                 overrides={s.overrides}
                 items={s.items}
-                size={place === 1 ? 64 : 52}
-                ring={t.ring}
-                ringWidth={place === 1 ? 4 : 3}
+                size={rank === 1 ? 64 : 52}
+                shape="square"
+                ring="var(--st-fg)"
+                ringWidth={2}
+                background="var(--st-peach)"
               />
-              <span className="mt-1.5 max-w-full truncate text-[12px] font-bold text-[#2a2540]">
+              <span className="st-display max-w-full truncate text-[14px] text-st-fg">
                 {s.name}
               </span>
-              <span className="font-display text-[13px] font-extrabold text-[#8b83c4]">
-                {value(s)}
-              </span>
+              <Mono style={{ color: "var(--st-primary)" }}>
+                {active === "streak" ? `${s.streak} days` : `${value(s)} pts`}
+              </Mono>
               <span
-                className="mt-1 flex w-full items-start justify-center rounded-t-lg pt-1.5 font-display text-lg font-black"
+                className="mt-[5px] flex w-full items-end justify-center rounded-[2px] pb-2"
                 style={{
-                  height,
-                  background:
-                    place === 1
-                      ? "rgba(255,213,74,.22)"
-                      : place === 2
-                        ? "#f1efee"
-                        : "rgba(240,140,110,.18)",
-                  color:
-                    place === 1
-                      ? "#c9820a"
-                      : place === 2
-                        ? "#8b83c4"
-                        : "#d4703f",
+                  height: rank === 1 ? 92 : rank === 2 ? 70 : 58,
+                  backgroundColor:
+                    rank === 1 ? "var(--st-accent)" : "var(--st-muted)",
                 }}
               >
-                {place}
+                <span className="st-display text-[22px] text-st-fg">
+                  {rank}
+                </span>
               </span>
             </Link>
           );
         })}
       </div>
 
-      <ul className="space-y-2 px-4 pb-4">
-        {ranked.map((s, i) => {
-          const t = tierForIndex(i);
-          const me = s.id === studentId;
-          return (
-            <li key={s.id}>
-              <Link
-                href={
-                  me
-                    ? `/student/${studentId}/profile`
-                    : `/student/${studentId}/profile/${s.id}`
-                }
-                className="flex items-center gap-3 rounded-xl border px-3 py-2.5"
-                style={{
-                  background: me ? "#f4f1ff" : "#fff",
-                  borderColor: me ? "#d3caf7" : "#ece8fb",
-                }}
-              >
-                <span className="w-5 shrink-0 text-center font-display text-[14px] font-extrabold text-[#8b83c4]">
-                  {i + 1}
-                </span>
-                <StudentAvatar
-                  seed={s.avatarSeed}
-                  overrides={s.overrides}
-                  items={s.items}
-                  size={40}
-                  ring={t.ring}
-                />
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[14px] font-bold text-[#2a2540]">
-                    {s.name}
-                    {me ? (
-                      <span className="ml-1 text-[11px] font-normal text-[#8b83c4]">
-                        (you)
-                      </span>
-                    ) : null}
-                  </span>
-                  <span className="block text-[11.5px] text-[#8b83c4]">
-                    {t.tier} · {s.level?.cefrBand ?? "—"} · {s.totalXp} XP
-                  </span>
-                </span>
-                <span className="shrink-0 text-right">
-                  <span className="block font-display text-[15px] font-extrabold text-[#534ab7]">
-                    {value(s)}
-                  </span>
-                  <span className="block text-[10px] text-[#a9a3cf]">
-                    {unit}
-                  </span>
-                </span>
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
+      {rest.map((s, i) => {
+        const me = s.id === studentId;
+        return (
+          <Link
+            key={s.id}
+            href={
+              me
+                ? `/student/${studentId}/profile`
+                : `/student/${studentId}/profile/${s.id}`
+            }
+            className="mb-2 flex min-h-[60px] items-center gap-2.5 rounded-[2px] border-2 border-st-fg px-3 transition-opacity active:opacity-70"
+            style={{
+              backgroundColor: me ? "var(--st-lavender)" : "var(--st-card)",
+            }}
+          >
+            <Mono className="w-[19px] text-center font-black text-st-muted-fg">
+              {i + 4}
+            </Mono>
+            <StudentAvatar
+              seed={s.avatarSeed}
+              overrides={s.overrides}
+              items={s.items}
+              size={38}
+              shape="square"
+              ring="var(--st-fg)"
+              ringWidth={2}
+              background="var(--st-peach)"
+            />
+            <span className="min-w-0 flex-1">
+              <span className="st-display mb-[3px] block truncate text-[14px] text-st-fg">
+                {s.name}
+                {me ? " · You" : ""}
+              </span>
+              <Mono className="block text-st-muted-fg">
+                {s.streak} day streak
+              </Mono>
+            </span>
+            <Mono className="font-black" style={{ color: "var(--st-primary)" }}>
+              {value(s)}
+            </Mono>
+          </Link>
+        );
+      })}
     </div>
   );
 }

@@ -4,24 +4,43 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import {
+  ArrowRight,
+  Award,
+  Check,
+  CheckCircle,
+  X,
+  XCircle,
+} from "lucide-react";
 import { isAnswerCorrect, type Question } from "@/lib/practice";
 import { completePracticeRound, recordAttempt } from "@/lib/actions/student";
 import type { LevelBreakdown } from "@/lib/level-engine";
-import { LevelBar } from "@/components/level-bar";
 import { JournalPrompt } from "@/components/student/journal-prompt";
-import { cn } from "@/lib/utils";
+import {
+  BlockButton,
+  Mono,
+  ProgressTrack,
+  Tile,
+} from "@/components/student/ui";
 
 type Answer = number | string | Record<string, string>;
 
 /**
- * The practice loop (§6 student 2): one question at a time, a progress bar, and
- * instant right/wrong feedback.
+ * Exercise + Lesson Complete, ported from the prototype's ExerciseScreen and
+ * CompleteScreen.
  *
- * Each answer is written the moment it is given rather than batched at the end,
- * so a parent watching the other tab sees today's activity and streak move
- * while their child is still practising (§7 step 5).
+ * Exercise: 2px-bordered header with ✕ and a progress bar, a mono eyebrow, a
+ * Georgia 26/32 title, a bordered word card, 57px answer rows, and a sticky
+ * footer that swaps the Check button for a feedback panel.
+ *
+ * Complete: primary-filled screen, a 108px card rotated 4°, Georgia 30 title,
+ * two stat tiles, a mastery tile, and an accent Continue button.
+ *
+ * There are no hearts — the plan lists XP, streak and gems, and a counter that
+ * gates nothing would be a placeholder.
+ *
+ * Each answer is written the moment it is given, so a parent watching another
+ * tab sees the numbers move while their child is still practising.
  */
 export function PracticeSession({
   studentId,
@@ -37,25 +56,21 @@ export function PracticeSession({
   startingPercent: number;
 }) {
   const router = useRouter();
-
-  // Held in state so a realtime-triggered refresh cannot reshuffle the round
-  // out from under the student mid-session.
   const [round] = useState(questions);
 
   const [index, setIndex] = useState(0);
   const [answer, setAnswer] = useState<Answer | null>(null);
   const [checked, setChecked] = useState<null | { correct: boolean }>(null);
   const [correctCount, setCorrectCount] = useState(0);
-  const [xpEarned, setXpEarned] = useState(0);
   const [level, setLevel] = useState<LevelBreakdown | null>(null);
   const [streak, setStreak] = useState<number | null>(null);
-  const [unlocked, setUnlocked] = useState<{ label: string; emoji: string }[]>([]);
+  const [earnedGems, setEarnedGems] = useState(0);
   const [done, setDone] = useState(false);
   const [pending, start] = useTransition();
 
   const startedAt = useMemo(() => Date.now(), []);
   const question = round[index];
-  const progress = Math.round((index / round.length) * 100);
+  const progress = Math.round(((index + (checked ? 1 : 0)) / round.length) * 100);
 
   function check() {
     if (answer === null || checked) return;
@@ -72,12 +87,8 @@ export function PracticeSession({
         });
         setLevel(result.breakdown);
         setStreak(result.streak);
-        setXpEarned((x) => x + (correct ? 10 : 2));
-        if (result.unlocked.length) {
-          setUnlocked((u) => [...u, ...result.unlocked]);
-          for (const item of result.unlocked) {
-            toast.success(`New item unlocked: ${item.label}`);
-          }
+        for (const item of result.unlocked) {
+          toast.success(`New item unlocked: ${item.label}`);
         }
       } catch (e) {
         toast.error(
@@ -91,7 +102,9 @@ export function PracticeSession({
     if (index + 1 >= round.length) {
       const minutes = Math.max(1, Math.round((Date.now() - startedAt) / 60000));
       start(async () => {
-        await completePracticeRound(studentId, minutes);
+        const result = await completePracticeRound(studentId, minutes);
+        setEarnedGems(result.earnedGems);
+        setLevel(result.breakdown);
         setDone(true);
         router.refresh();
       });
@@ -104,285 +117,253 @@ export function PracticeSession({
 
   if (done) {
     return (
-      <SessionComplete
+      <CompleteScreen
         studentId={studentId}
         topicId={topicId}
         topicTitle={topicTitle}
         correctCount={correctCount}
         total={round.length}
-        xpEarned={xpEarned}
-        level={level}
+        earnedGems={earnedGems}
         streak={streak}
-        unlocked={unlocked}
+        level={level}
         startingPercent={startingPercent}
       />
     );
   }
 
+  const correctText =
+    question.kind === "CHOICE"
+      ? question.options[question.answerIndex]
+      : question.kind === "INPUT"
+        ? question.answer
+        : question.pairs.map((p) => `${p.left} – ${p.right}`).join(", ");
+
   return (
-    <div className="mx-auto max-w-2xl">
-      <div className="mb-6 flex items-center gap-3">
+    <div className="flex min-h-full flex-col bg-st-card">
+      <header className="flex items-center gap-3 border-b-2 border-st-fg p-4">
         <Link
           href={`/student/${studentId}`}
-          className="text-xl text-muted-foreground hover:text-foreground"
           aria-label="Exit practice"
+          className="transition-opacity active:opacity-70"
         >
-          ✕
+          <X size={21} style={{ color: "var(--st-muted-fg)" }} />
         </Link>
-        <div className="h-3 flex-1 overflow-hidden rounded-full bg-black/10">
-          <div
-            className="level-bar-fill h-full rounded-full transition-[width] duration-300"
-            style={{ width: `${Math.max(3, progress)}%` }}
-          />
-        </div>
-        <span className="text-sm font-semibold tabular-nums text-muted-foreground">
+        <ProgressTrack className="flex-1" percent={progress} />
+        <Mono className="font-black text-st-fg">
           {index + 1}/{round.length}
-        </span>
-      </div>
+        </Mono>
+      </header>
 
-      <p className="mb-1 text-sm font-medium text-muted-foreground">
-        {question.instruction}
-      </p>
+      <div className="flex-1 p-[22px] pb-[145px]">
+        <Mono className="block uppercase" style={{ color: "var(--st-primary)" }}>
+          {topicTitle} · {question.instruction}
+        </Mono>
 
-      <div key={question.id} className="animate-rise">
+        <h1 className="st-display mb-6 mt-3.5 text-[26px] leading-[32px] text-st-fg">
+          {question.kind === "CHOICE"
+            ? "Select the correct answer"
+            : question.kind === "INPUT"
+              ? "Fill in the blank"
+              : "Match the pairs"}
+        </h1>
+
+        {question.kind !== "MATCH" ? (
+          <div
+            className="mb-6 flex flex-col items-center rounded-[2px] border-2 border-st-fg p-[18px]"
+            style={{ backgroundColor: "var(--st-peach)" }}
+          >
+            <p className="st-display text-[22px] text-st-primary">
+              “{question.prompt}”
+            </p>
+            <Mono className="mt-1 text-st-muted-fg">
+              {question.kind === "INPUT"
+                ? (question.hint ?? "Type the missing word.")
+                : "Tap the answer you know."}
+            </Mono>
+          </div>
+        ) : null}
+
         {question.kind === "CHOICE" ? (
-          <ChoiceQuestion
-            question={question}
-            answer={answer as number | null}
-            checked={checked}
-            onAnswer={setAnswer}
-          />
-        ) : question.kind === "INPUT" ? (
-          <InputQuestion
-            question={question}
-            answer={(answer as string) ?? ""}
-            checked={checked}
-            onAnswer={setAnswer}
-            onSubmit={check}
-          />
-        ) : (
-          <MatchQuestion
-            question={question}
-            answer={(answer as Record<string, string>) ?? {}}
-            checked={checked}
-            onAnswer={setAnswer}
-          />
-        )}
-      </div>
-
-      {checked ? (
-        <div
-          className={cn(
-            "animate-pop mt-5 rounded-xl p-4",
-            checked.correct
-              ? "bg-[var(--success)]/12 text-[var(--success)]"
-              : "bg-[var(--danger)]/10 text-[var(--danger)]",
-          )}
-        >
-          <p className="font-bold">
-            {checked.correct ? "🎉 Excellent!" : "Not quite"}
-          </p>
-          {!checked.correct ? (
-            <p className="mt-1 text-sm text-foreground">
-              Correct answer:{" "}
-              <span className="font-semibold">
-                {question.kind === "CHOICE"
-                  ? question.options[question.answerIndex]
-                  : question.kind === "INPUT"
-                    ? question.answer
-                    : question.pairs
-                        .map((p) => `${p.left} – ${p.right}`)
-                        .join(", ")}
-              </span>
-            </p>
-          ) : null}
-          {question.kind === "CHOICE" && question.explanation ? (
-            <p className="mt-1 text-sm italic text-foreground/80">
-              {question.explanation}
-            </p>
-          ) : null}
-        </div>
-      ) : null}
-
-      <div className="mt-6 flex justify-end">
-        {checked ? (
-          <Button
-            size="lg"
-            className="h-12 px-8 text-base"
-            onClick={next}
-            disabled={pending}
-          >
-            {index + 1 >= round.length ? "Finish" : "Continue"}
-          </Button>
-        ) : (
-          <Button
-            size="lg"
-            className="h-12 px-8 text-base"
-            onClick={check}
-            disabled={answer === null}
-          >
-            Check
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function ChoiceQuestion({
-  question,
-  answer,
-  checked,
-  onAnswer,
-}: {
-  question: Extract<Question, { kind: "CHOICE" }>;
-  answer: number | null;
-  checked: null | { correct: boolean };
-  onAnswer: (a: Answer) => void;
-}) {
-  return (
-    <>
-      <p className="mb-5 text-2xl font-bold">{question.prompt}</p>
-      <ul className="space-y-2.5">
-        {question.options.map((option, i) => {
-          const selected = answer === i;
-          const revealCorrect = checked && i === question.answerIndex;
-          const revealWrong = checked && selected && !checked.correct;
-
-          return (
-            <li key={`${option}-${i}`}>
-              <button
-                type="button"
-                disabled={Boolean(checked)}
-                onClick={() => onAnswer(i)}
-                className={cn(
-                  "w-full rounded-xl border-2 px-4 py-3.5 text-left text-base transition-colors",
-                  revealCorrect
-                    ? "border-[var(--success)] bg-[var(--success)]/10"
-                    : revealWrong
-                      ? "border-[var(--danger)] bg-[var(--danger)]/10"
-                      : selected
-                        ? "border-[var(--persona)] bg-[var(--persona-soft)]"
-                        : "bg-card hover:border-[var(--persona-border)]",
-                )}
-              >
-                {option}
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-    </>
-  );
-}
-
-function InputQuestion({
-  question,
-  answer,
-  checked,
-  onAnswer,
-  onSubmit,
-}: {
-  question: Extract<Question, { kind: "INPUT" }>;
-  answer: string;
-  checked: null | { correct: boolean };
-  onAnswer: (a: Answer) => void;
-  onSubmit: () => void;
-}) {
-  return (
-    <>
-      <p className="mb-5 text-2xl font-bold">{question.prompt}</p>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          onSubmit();
-        }}
-      >
-        <Input
-          value={answer}
-          onChange={(e) => onAnswer(e.target.value)}
-          disabled={Boolean(checked)}
-          placeholder="Type your answer…"
-          aria-label="Your answer"
-          autoFocus
-          className="h-14 text-lg"
-        />
-      </form>
-      {question.hint ? (
-        <p className="mt-2 text-sm text-muted-foreground">
-          Hint: {question.hint}
-        </p>
-      ) : null}
-    </>
-  );
-}
-
-function MatchQuestion({
-  question,
-  answer,
-  checked,
-  onAnswer,
-}: {
-  question: Extract<Question, { kind: "MATCH" }>;
-  answer: Record<string, string>;
-  checked: null | { correct: boolean };
-  onAnswer: (a: Answer) => void;
-}) {
-  // Right-hand options are shuffled once per question, not per render.
-  const rights = useMemo(
-    () => [...question.pairs.map((p) => p.right)].sort(),
-    [question],
-  );
-
-  return (
-    <div className="space-y-3">
-      {question.pairs.map((pair) => (
-        <div key={pair.left} className="flex flex-wrap items-center gap-2">
-          <span className="min-w-28 font-semibold">{pair.left}</span>
-          <div className="flex flex-wrap gap-2">
-            {rights.map((right) => {
-              const selected = answer[pair.left] === right;
-              const isRight = checked && right === pair.right;
-              const isWrongPick = checked && selected && right !== pair.right;
-
+          <ul className="flex flex-col gap-[11px]">
+            {question.options.map((option, i) => {
+              const selected = answer === i;
+              const isRight = checked && i === question.answerIndex;
+              const isWrong = checked && selected && !checked.correct;
               return (
-                <button
-                  key={right}
-                  type="button"
-                  disabled={Boolean(checked)}
-                  onClick={() => onAnswer({ ...answer, [pair.left]: right })}
-                  className={cn(
-                    "rounded-lg border-2 px-3 py-1.5 text-sm transition-colors",
-                    isRight
-                      ? "border-[var(--success)] bg-[var(--success)]/10"
-                      : isWrongPick
-                        ? "border-[var(--danger)] bg-[var(--danger)]/10"
-                        : selected
-                          ? "border-[var(--persona)] bg-[var(--persona-soft)]"
-                          : "bg-card hover:border-[var(--persona-border)]",
-                  )}
-                >
-                  {right}
-                </button>
+                <li key={`${option}-${i}`}>
+                  <button
+                    type="button"
+                    disabled={Boolean(checked)}
+                    onClick={() => setAnswer(i)}
+                    className="flex min-h-[57px] w-full items-center justify-between rounded-[2px] border-2 px-[17px] text-left transition-opacity active:opacity-70"
+                    style={{
+                      backgroundColor: isRight
+                        ? "var(--st-mint)"
+                        : isWrong
+                          ? "var(--st-peach)"
+                          : selected
+                            ? "var(--st-lavender)"
+                            : "var(--st-card)",
+                      borderColor: isRight
+                        ? "var(--st-primary)"
+                        : isWrong
+                          ? "var(--st-destructive)"
+                          : selected
+                            ? "var(--st-primary)"
+                            : "var(--st-fg)",
+                    }}
+                  >
+                    <span
+                      className="st-display text-[16px] font-bold"
+                      style={{
+                        color: isWrong
+                          ? "var(--st-destructive)"
+                          : "var(--st-fg)",
+                      }}
+                    >
+                      {option}
+                    </span>
+                    {isRight ? (
+                      <CheckCircle
+                        size={19}
+                        style={{ color: "var(--st-primary)" }}
+                      />
+                    ) : isWrong ? (
+                      <XCircle
+                        size={19}
+                        style={{ color: "var(--st-destructive)" }}
+                      />
+                    ) : null}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        ) : question.kind === "INPUT" ? (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              check();
+            }}
+          >
+            <input
+              value={(answer as string) ?? ""}
+              onChange={(e) => setAnswer(e.target.value)}
+              disabled={Boolean(checked)}
+              placeholder="Type your answer…"
+              aria-label="Your answer"
+              autoFocus
+              className="st-display min-h-[57px] w-full rounded-[2px] border-2 border-st-fg bg-st-card px-[17px] text-[16px] font-bold text-st-fg outline-none"
+            />
+          </form>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {question.pairs.map((pair) => {
+              const chosen = (answer as Record<string, string>) ?? {};
+              return (
+                <div key={pair.left} className="flex flex-wrap items-center gap-2">
+                  <span className="st-display min-w-24 text-[16px] text-st-fg">
+                    {pair.left}
+                  </span>
+                  {[...question.pairs.map((p) => p.right)].sort().map((right) => {
+                    const on = chosen[pair.left] === right;
+                    const isRight = checked && right === pair.right;
+                    const isWrong = checked && on && right !== pair.right;
+                    return (
+                      <button
+                        key={right}
+                        type="button"
+                        disabled={Boolean(checked)}
+                        onClick={() =>
+                          setAnswer({ ...chosen, [pair.left]: right })
+                        }
+                        className="rounded-[2px] border-2 px-3 py-1.5 transition-opacity active:opacity-70"
+                        style={{
+                          backgroundColor: isRight
+                            ? "var(--st-mint)"
+                            : isWrong
+                              ? "var(--st-peach)"
+                              : on
+                                ? "var(--st-lavender)"
+                                : "var(--st-card)",
+                          borderColor: isWrong
+                            ? "var(--st-destructive)"
+                            : "var(--st-fg)",
+                        }}
+                      >
+                        <Mono className="text-st-fg">{right}</Mono>
+                      </button>
+                    );
+                  })}
+                </div>
               );
             })}
           </div>
-        </div>
-      ))}
+        )}
+      </div>
+
+      <div className="sticky bottom-0 border-t-2 border-st-fg bg-st-card p-4">
+        {checked ? (
+          <div
+            className="flex items-center gap-2.5 rounded-[2px] border-2 border-st-fg p-3"
+            style={{
+              backgroundColor: checked.correct
+                ? "var(--st-mint)"
+                : "var(--st-peach)",
+            }}
+          >
+            <span className="flex-1">
+              <span
+                className="st-display mb-1 block text-[17px]"
+                style={{
+                  color: checked.correct
+                    ? "var(--st-primary)"
+                    : "var(--st-destructive)",
+                }}
+              >
+                {checked.correct ? "Excellent!" : `Correct answer: ${correctText}`}
+              </span>
+              <Mono className="block text-st-fg">
+                {checked.correct
+                  ? "Mastery went up"
+                  : "Keep going, you got this"}
+              </Mono>
+            </span>
+            <BlockButton
+              onClick={next}
+              disabled={pending}
+              tone={checked.correct ? "primary" : "destructive"}
+              className="min-h-[45px] px-4"
+            >
+              {index + 1 >= round.length ? "Finish" : "Continue"}
+              <ArrowRight size={17} aria-hidden />
+            </BlockButton>
+          </div>
+        ) : (
+          <BlockButton
+            onClick={check}
+            disabled={answer === null}
+            tone={answer === null ? "muted" : "primary"}
+            className="w-full"
+          >
+            Check
+            <Check size={17} aria-hidden />
+          </BlockButton>
+        )}
+      </div>
     </div>
   );
 }
 
-function SessionComplete({
+function CompleteScreen({
   studentId,
   topicId,
   topicTitle,
   correctCount,
   total,
-  xpEarned,
-  level,
+  earnedGems,
   streak,
-  unlocked,
+  level,
   startingPercent,
 }: {
   studentId: string;
@@ -390,81 +371,99 @@ function SessionComplete({
   topicTitle: string;
   correctCount: number;
   total: number;
-  xpEarned: number;
-  level: LevelBreakdown | null;
+  earnedGems: number;
   streak: number | null;
-  unlocked: { label: string; emoji: string }[];
+  level: LevelBreakdown | null;
   startingPercent: number;
 }) {
   return (
-    <div className="mx-auto max-w-xl space-y-5 text-center">
-      <div className="animate-pop">
-        <p className="text-6xl" aria-hidden>
-          {correctCount === total ? "🏆" : "🎉"}
-        </p>
-        <h2 className="mt-3 text-2xl font-bold">Lesson complete!</h2>
-        <p className="mt-1 text-muted-foreground">
-          {topicTitle} — {correctCount}/{total} correct
-        </p>
+    <div
+      className="flex min-h-full flex-col items-center px-[25px] pb-10 pt-[21%]"
+      style={{ backgroundColor: "var(--st-primary)" }}
+    >
+      <div
+        className="mb-6 flex size-[108px] rotate-[4deg] items-center justify-center rounded-[2px] border-[3px] border-st-fg"
+        style={{ backgroundColor: "var(--st-card)" }}
+      >
+        <Award size={44} style={{ color: "var(--st-accent)" }} aria-hidden />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-xl border bg-card p-4">
-          <p className="text-2xl font-bold" style={{ color: "var(--persona)" }}>
-            +{xpEarned}
-          </p>
-          <p className="text-xs text-muted-foreground">XP earned</p>
-        </div>
-        <div className="rounded-xl border bg-card p-4">
-          <p className="text-2xl font-bold" style={{ color: "var(--persona)" }}>
-            🔥 {streak ?? "—"}
-          </p>
-          <p className="text-xs text-muted-foreground">day streak</p>
-        </div>
+      <h1 className="st-display text-center text-[30px] text-st-primary-fg">
+        Lesson Complete!
+      </h1>
+      <Mono className="mb-[26px] mt-[7px] text-st-primary-fg">
+        {topicTitle} · {correctCount}/{total} correct
+      </Mono>
+
+      <div className="flex w-full gap-3">
+        <Tile
+          className="flex flex-1 flex-col items-center p-3.5"
+          style={{ backgroundColor: "rgba(244,236,221,0.92)" }}
+        >
+          <span className="st-display text-[22px] text-st-fg">
+            +{earnedGems}
+          </span>
+          <Mono className="text-st-muted-fg">Gems</Mono>
+        </Tile>
+        <Tile
+          className="flex flex-1 flex-col items-center p-3.5"
+          style={{ backgroundColor: "rgba(244,236,221,0.92)" }}
+        >
+          <span className="st-display text-[22px] text-st-fg">
+            {streak ?? "—"}
+          </span>
+          <Mono className="text-st-muted-fg">Day streak</Mono>
+        </Tile>
       </div>
 
       {level ? (
-        <div className="rounded-xl border bg-card p-4 text-left">
-          <p className="mb-2 text-sm font-medium">Your level now</p>
-          <LevelBar level={level} />
-        </div>
+        <Tile
+          className="mt-[15px] w-full p-4"
+          style={{
+            backgroundColor: "rgba(244,236,221,0.16)",
+            borderColor: "var(--st-primary-fg)",
+            boxShadow: "3px 3px 0 0 var(--st-primary-fg)",
+          }}
+        >
+          <div className="flex items-center justify-between">
+            <Mono className="text-st-primary-fg">{level.cefrBand}</Mono>
+            <Mono className="text-st-primary-fg">
+              {level.progressToNextBand}%
+            </Mono>
+          </div>
+          <ProgressTrack
+            className="mt-2.5"
+            percent={level.progressToNextBand}
+            trackColor="rgba(244,236,221,0.25)"
+            fillColor="var(--st-accent)"
+          />
+          <Mono className="mt-2 block text-st-primary-fg">
+            {level.nextBand
+              ? `Keep going to reach ${level.nextBand}.`
+              : "Top band reached."}
+          </Mono>
+        </Tile>
       ) : null}
 
-      {unlocked.length > 0 ? (
-        <div className="animate-pop rounded-xl border bg-[var(--persona-soft)] p-4">
-          <p className="font-semibold" style={{ color: "var(--persona)" }}>
-            New item unlocked!
-          </p>
-          <p className="mt-1 text-sm">
-            {unlocked.map((u) => `${u.emoji} ${u.label}`).join(" · ")}
-          </p>
-        </div>
-      ) : null}
-
-      <JournalPrompt
-        studentId={studentId}
-        topicId={topicId}
-        topicTitle={topicTitle}
-        startingPercent={startingPercent}
-      />
-
-      <div className="flex flex-wrap justify-center gap-2">
-        <Button
-          size="lg"
-          className="h-12 px-6 text-base"
-          render={<Link href={`/student/${studentId}`} />}
-        >
-          Back to path
-        </Button>
-        <Button
-          variant="outline"
-          size="lg"
-          className="h-12 px-6 text-base"
-          render={<Link href={`/student/${studentId}/practice/${topicId}`} />}
-        >
-          Practise again
-        </Button>
+      <div className="mt-4 w-full">
+        <JournalPrompt
+          studentId={studentId}
+          topicId={topicId}
+          topicTitle={topicTitle}
+          startingPercent={startingPercent}
+        />
       </div>
+
+      <Link href={`/student/${studentId}`} className="mt-[22px] w-full">
+        <BlockButton
+          tone="accent"
+          className="min-h-[54px] w-full"
+          type="button"
+        >
+          Continue
+          <ArrowRight size={18} aria-hidden />
+        </BlockButton>
+      </Link>
     </div>
   );
 }

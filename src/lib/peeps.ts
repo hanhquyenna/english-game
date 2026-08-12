@@ -49,12 +49,19 @@ export const FACE_OPTIONS: readonly FaceType[] = [
   "Explaining", "Driven", "EatingHappy", "CheersNM",
 ] as const;
 
-/** Bust poses = the "Clothes" tab. School-appropriate outfits only. */
+/**
+ * Bust poses = the "Clothes" tab.
+ *
+ * Only poses whose garment is drawn filled. Open Peeps fills every *white*
+ * region with `backgroundColor`, which is the skin tone here — so a pose whose
+ * top is white (Shirt, Hoodie, Sweater, Gaming, Device, ShirtCoat, DotJacket)
+ * renders as a bare chest. Verified visually across the whole set before
+ * trimming; these are the ones that read as dressed at every avatar size.
+ */
 export const BODY_OPTIONS: readonly BustPoseType[] = [
-  "Shirt", "ButtonShirt", "Hoodie", "Turtleneck", "Sweater", "SweaterDots",
-  "StripedShirt", "PocketShirt", "PoloSweater", "SportyShirt", "ShirtFilled",
-  "Geek", "Gaming", "Device", "Explaining", "PointingUp", "ArmsCrossed",
-  "DotJacket", "ShirtCoat", "Paper",
+  "ButtonShirt", "Turtleneck", "SweaterDots", "StripedShirt", "PocketShirt",
+  "PoloSweater", "SportyShirt", "ShirtFilled", "Geek", "Explaining",
+  "PointingUp", "ArmsCrossed", "Paper",
 ] as const;
 
 /** Standing poses, for the full-body view. */

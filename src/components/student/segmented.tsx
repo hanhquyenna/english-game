@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { Mono } from "@/components/student/ui";
 
 /**
- * The design's pill tab row, used on Challenges, Rank and the Shop.
+ * `styles.segmented` / `styles.segment` — two equal-width 38px tall segments
+ * with 2px borders and a 7px gap, filled with the primary colour when active.
  *
- * Tabs are links carrying a query param rather than client state, so a tab is
- * addressable, survives a realtime refresh, and works with the back button.
+ * Implemented as links carrying a query param so a tab is addressable and
+ * survives the realtime refresh.
  */
 export function Segmented({
   tabs,
@@ -20,7 +22,7 @@ export function Segmented({
   param?: string;
 }) {
   return (
-    <div className="flex gap-2 px-4 py-3">
+    <div className="mb-4 flex gap-[7px]">
       {tabs.map((t) => {
         const on = t.key === active;
         return (
@@ -29,14 +31,19 @@ export function Segmented({
             href={`${basePath}?${param}=${t.key}`}
             aria-current={on ? "page" : undefined}
             scroll={false}
-            className="rounded-full border border-[#ece8fb] px-3.5 py-1.5 text-[13px] font-bold transition-colors"
+            className="flex min-h-[38px] flex-1 items-center justify-center rounded-[2px] border-2 border-st-fg transition-opacity active:opacity-70"
             style={{
-              background: on ? "#534ab7" : "#fff",
-              color: on ? "#fff" : "#8b83c4",
-              borderColor: on ? "#534ab7" : "#ece8fb",
+              backgroundColor: on ? "var(--st-primary)" : "var(--st-card)",
             }}
           >
-            {t.label}
+            <Mono
+              className="font-extrabold"
+              style={{
+                color: on ? "var(--st-primary-fg)" : "var(--st-muted-fg)",
+              }}
+            >
+              {t.label}
+            </Mono>
           </Link>
         );
       })}

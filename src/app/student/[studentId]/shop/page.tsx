@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getStudentSummary } from "@/lib/queries";
 import { createServerSupabase } from "@/lib/supabase/server";
@@ -49,15 +48,7 @@ export default async function ShopPage({
   );
 
   return (
-    <div className="px-4 py-4">
-      <Link
-        href={`/student/${studentId}/profile`}
-        className="text-[13px] font-bold text-[#8b83c4]"
-      >
-        ← Profile
-      </Link>
-
-      <ShopClient
+    <ShopClient
         studentId={studentId}
         seed={student.avatarSeed}
         overrides={student.overrides}
@@ -80,8 +71,7 @@ export default async function ShopPage({
           cost: Number(a.cost ?? 0),
           owned: owned.has(a.id),
           equipped: equipped.has(a.id),
-        }))}
-      />
-    </div>
+      }))}
+    />
   );
 }

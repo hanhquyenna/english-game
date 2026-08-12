@@ -1,12 +1,18 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ChevronRight, Home, Phone, ShoppingBag, User, Users, X } from "lucide-react";
 import { getClassForStudent, getStudentSummary } from "@/lib/queries";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { StudentAvatar } from "@/components/student-avatar";
+import { Mono, PageTitle, SectionLabel, Tile } from "@/components/student/ui";
 
 export const dynamic = "force-dynamic";
 
-/** Account details, every row backed by a real record. */
+/**
+ * Account, ported from the prototype's AccountScreen: title with a close ✕,
+ * an identity card, then a single tile of rows divided by hairlines.
+ * Every row is backed by a real record.
+ */
 export default async function AccountPage({
   params,
 }: PageProps<"/student/[studentId]/account">) {
@@ -19,112 +25,111 @@ export default async function AccountPage({
   if (!student || !klass) notFound();
 
   const db = createServerSupabase();
-  const [{ data: links }, { data: teacher }] = await Promise.all([
-    db
-      .from("parent_links")
-      .select("users!parent_links_parent_id_fkey(name)")
-      .eq("student_id", studentId),
-    db.from("users").select("name").eq("id", klass.teacher_id).maybeSingle(),
-  ]);
+  const { data: links } = await db
+    .from("parent_links")
+    .select("users!parent_links_parent_id_fkey(name)")
+    .eq("student_id", studentId);
 
   const parents = (links ?? [])
     .map((l) => l.users?.name)
     .filter((n): n is string => Boolean(n));
 
   const rows = [
-    { label: "School", value: klass.school, color: "#534ab7" },
-    { label: "Class", value: klass.name, color: "#3d6fe0" },
-    { label: "Teacher", value: teacher?.name ?? "—", color: "#58c96a" },
+    { label: "School", value: klass.school, Icon: Home, color: "var(--st-primary)" },
+    { label: "Class", value: klass.name, Icon: Users, color: "var(--st-primary)" },
     {
       label: "Parent / Guardian",
       value: parents.length ? parents.join(", ") : "Not linked",
-      color: "#7d74c9",
+      Icon: Phone,
+      color: "var(--st-primary)",
     },
   ];
 
   return (
-    <div className="px-4 py-4">
-      <Link href={`/student/${studentId}`} className="text-[13px] font-bold text-[#8b83c4]">
-        ← Learn
-      </Link>
+    <div className="px-5 pb-[30px] pt-[18px]">
+      <div className="flex items-center justify-between">
+        <PageTitle>Account</PageTitle>
+        <Link
+          href={`/student/${studentId}`}
+          aria-label="Close account"
+          className="transition-opacity active:opacity-70"
+        >
+          <X size={21} style={{ color: "var(--st-primary)" }} />
+        </Link>
+      </div>
 
-      <div className="mt-3 flex items-center gap-3">
+      <Tile
+        className="mt-4 flex items-center gap-3 p-[13px]"
+        style={{ backgroundColor: "var(--st-card)" }}
+      >
         <StudentAvatar
           seed={student.avatarSeed}
           overrides={student.overrides}
           items={student.items}
-          size={64}
-          ring="#d3caf7"
+          size={58}
+          shape="square"
+          ring="var(--st-fg)"
+          ringWidth={2}
+          background="var(--st-peach)"
         />
-        <div>
-          <h1 className="font-display text-xl font-extrabold text-[#2a2540]">
+        <span className="min-w-0 flex-1">
+          <span className="st-display block truncate text-[14px] text-st-fg">
             {student.name}
-          </h1>
-          <p className="text-[13px] text-[#8b83c4]">
-            {student.level?.cefrBand ?? "—"} · {student.totalXp} XP · 🔥{" "}
-            {student.streak}
-          </p>
-        </div>
-      </div>
+          </span>
+          <Mono className="block text-st-muted-fg">{klass.name}</Mono>
+        </span>
+      </Tile>
 
-      <ul className="mt-4 space-y-2">
+      <SectionLabel>Your info</SectionLabel>
+
+      <Tile style={{ backgroundColor: "var(--st-card)" }}>
         {rows.map((r) => (
-          <li
+          <div
             key={r.label}
-            className="flex items-center gap-3 rounded-xl border border-[#ece8fb] bg-white px-3.5 py-3"
+            className="flex items-center gap-3 border-b p-[13px]"
+            style={{ borderColor: "var(--st-muted)" }}
           >
-            <span
-              aria-hidden
-              className="size-8 shrink-0 rounded-lg"
-              style={{ background: r.color, opacity: 0.18 }}
-            />
+            <r.Icon size={17} style={{ color: r.color }} aria-hidden />
             <span className="min-w-0 flex-1">
-              <span className="block text-[11px] font-bold uppercase tracking-wide text-[#a9a3cf]">
+              <span className="st-display block text-[14px] text-st-fg">
                 {r.label}
               </span>
-              <span className="block truncate text-[14px] font-bold text-[#2a2540]">
-                {r.value}
-              </span>
+              <Mono className="block truncate text-st-muted-fg">{r.value}</Mono>
             </span>
-          </li>
+          </div>
         ))}
 
-        <li>
-          <Link
-            href={`/student/${studentId}/avatar`}
-            className="flex items-center gap-3 rounded-xl border border-[#ece8fb] bg-white px-3.5 py-3"
-          >
-            <span aria-hidden className="size-8 shrink-0 rounded-lg bg-[#58c96a]/20" />
-            <span className="min-w-0 flex-1">
-              <span className="block text-[14px] font-bold text-[#2a2540]">
-                Change character
-              </span>
-              <span className="block text-[12px] text-[#8b83c4]">
-                Pick a new look
-              </span>
+        <Link
+          href={`/student/${studentId}/avatar`}
+          className="flex items-center gap-3 border-b p-[13px] transition-opacity active:opacity-70"
+          style={{ borderColor: "var(--st-muted)" }}
+        >
+          <User size={17} style={{ color: "var(--st-secondary)" }} aria-hidden />
+          <span className="min-w-0 flex-1">
+            <span className="st-display block text-[14px] text-st-fg">
+              Change avatar
             </span>
-            <span aria-hidden className="text-[#a9a3cf]">›</span>
-          </Link>
-        </li>
+            <Mono className="block text-st-muted-fg">Update look &amp; style</Mono>
+          </span>
+          <ChevronRight size={17} style={{ color: "var(--st-muted-fg)" }} aria-hidden />
+        </Link>
 
-        <li>
-          <Link
-            href={`/student/${studentId}/shop`}
-            className="flex items-center gap-3 rounded-xl border border-[#ece8fb] bg-white px-3.5 py-3"
-          >
-            <span aria-hidden className="size-8 shrink-0 rounded-lg bg-[#ffd54a]/40" />
-            <span className="min-w-0 flex-1">
-              <span className="block text-[14px] font-bold text-[#2a2540]">
-                Avatar shop
-              </span>
-              <span className="block text-[12px] text-[#8b83c4]">
-                Hair, hats, clothes &amp; more · 💎 {student.gems}
-              </span>
+        <Link
+          href={`/student/${studentId}/shop`}
+          className="flex items-center gap-3 p-[13px] transition-opacity active:opacity-70"
+        >
+          <ShoppingBag size={17} style={{ color: "var(--st-accent)" }} aria-hidden />
+          <span className="min-w-0 flex-1">
+            <span className="st-display block text-[14px] text-st-fg">
+              Avatar Shop
             </span>
-            <span aria-hidden className="text-[#a9a3cf]">›</span>
-          </Link>
-        </li>
-      </ul>
+            <Mono className="block text-st-muted-fg">
+              Hair, hats, clothes &amp; more · {student.gems} gems
+            </Mono>
+          </span>
+          <ChevronRight size={17} style={{ color: "var(--st-muted-fg)" }} aria-hidden />
+        </Link>
+      </Tile>
     </div>
   );
 }
