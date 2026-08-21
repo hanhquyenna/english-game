@@ -6,6 +6,7 @@ import { buildLessonPath } from "@/lib/lesson-path";
 import { buildRound } from "@/lib/practice";
 import { sliceForLevel } from "@/lib/islands";
 import { PracticeSession } from "@/components/student/practice-session";
+import { PracticeSessionRunner } from "@/components/student/practice-session-runner";
 import { Mono, Tile } from "@/components/student/ui";
 
 export const dynamic = "force-dynamic";
@@ -13,11 +14,44 @@ export const dynamic = "force-dynamic";
 export default async function PracticePage({
   params,
   searchParams,
-}: PageProps<"/student/[studentId]/practice/[topicId]">) {
+}: {
+  params: Promise<{ studentId: string; topicId: string }>;
+  searchParams: Promise<{ level?: string }>;
+}) {
   const { studentId, topicId } = await params;
   const { level } = await searchParams;
   const levelNumber = Number(level);
+  const db = createServerSupabase();
 
+  // 1. First check if topicId matches a practice_session created by Game Loop v1 (C2)
+  const { data: session } = await (db as any)
+    .from("practice_sessions")
+    .select("id, mode, skill_tags, question_count")
+    .eq("id", topicId)
+    .maybeSingle();
+
+  if (session) {
+    const { data: items } = await (db as any)
+      .from("practice_session_items")
+      .select("exercise_id, resolved, exercises(id, topic_id, type, content, skill_tag)")
+      .eq("session_id", (session as any).id)
+      .order("order");
+
+    const exercises = ((items as any[]) ?? [])
+      .map((item: any) => item.exercises)
+      .filter(Boolean);
+
+    return (
+      <PracticeSessionRunner
+        studentId={studentId}
+        sessionId={(session as any).id}
+        mode={(session as any).mode as "mistake_review" | "skill_boost"}
+        exercises={exercises as any[]}
+      />
+    );
+  }
+
+  // 2. Otherwise handle standard topic practice
   const klass = await getClassForStudent(studentId);
   if (!klass) notFound();
 
@@ -25,29 +59,26 @@ export default async function PracticePage({
   const path = buildLessonPath(topics);
   const node = path.find((n) => n.topic.id === topicId);
 
-  // A locked or unassigned topic is not practisable — say so rather than
-  // rendering an empty session.
   if (!node || node.state === "LOCKED") {
     return (
       <Tile
         className="m-5 p-6 text-center"
         style={{ backgroundColor: "var(--st-card)" }}
       >
-        <p className="st-display text-[17px] text-st-fg">This lesson is locked</p>
+        <p className="st-display text-[17px] text-st-fg">Bài học này đã bị khóa</p>
         <Mono className="mt-2 block text-st-muted-fg">
-          {node?.lockedReason ?? "Your teacher has not assigned this unit yet."}
+          {node?.lockedReason ?? "Giáo viên chưa giao bài học này."}
         </Mono>
         <Link
           href={`/student/${studentId}`}
           className="st-mono mt-4 inline-block font-black uppercase tracking-[0.6px] text-st-primary"
         >
-          ← Back to your path
+          ← Quay lại hành trình
         </Link>
       </Tile>
     );
   }
 
-  const db = createServerSupabase();
   const [{ data: exercises }, { data: vocab }, { data: correctAttempts }] =
     await Promise.all([
       db
@@ -62,8 +93,6 @@ export default async function PracticePage({
         .eq("correct", true),
     ]);
 
-  // A level is a fixed slice of the unit's exercises, so "Level 3" always
-  // means the same questions. Without a level we practise the whole unit.
   const pool =
     Number.isFinite(levelNumber) && levelNumber > 0
       ? sliceForLevel(exercises ?? [], levelNumber)
@@ -82,16 +111,16 @@ export default async function PracticePage({
         style={{ backgroundColor: "var(--st-card)" }}
       >
         <p className="st-display text-[17px] text-st-fg">
-          No exercises in this lesson yet
+          Chưa có bài tập trong bài học này
         </p>
         <Mono className="mt-2 block text-st-muted-fg">
-          Your teacher will add some soon.
+          Giáo viên sẽ cập nhật bài tập sớm.
         </Mono>
         <Link
           href={`/student/${studentId}`}
           className="st-mono mt-4 inline-block font-black uppercase tracking-[0.6px] text-st-primary"
         >
-          ← Back to your path
+          ← Quay lại hành trình
         </Link>
       </Tile>
     );

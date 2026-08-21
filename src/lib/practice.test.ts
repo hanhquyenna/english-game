@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildRound,
+  generateShuffledSession,
   isAnswerCorrect,
   ROUND_SIZE,
   type ExerciseInput,
@@ -140,6 +141,33 @@ describe("buildRound", () => {
     expect(
       buildRound([], { masteredIds: new Set(), vocabMeanings: [], seed: 1 }),
     ).toEqual([]);
+  });
+});
+
+describe("generateShuffledSession", () => {
+  it("prevents consecutive identical exercise formats", () => {
+    const exercises = [
+      { id: "1", type: "MCQ", skill: "VOCAB" },
+      { id: "2", type: "MCQ", skill: "VOCAB" },
+      { id: "3", type: "FILL_BLANK", skill: "GRAMMAR" },
+      { id: "4", type: "MATCHING", skill: "READING" },
+    ];
+
+    const session = generateShuffledSession(exercises, { seed: 42 });
+    for (let i = 1; i < session.length; i++) {
+      expect(session[i].type).not.toBe(session[i - 1].type);
+    }
+  });
+
+  it("prioritizes biased skill when provided", () => {
+    const exercises = [
+      { id: "1", type: "MCQ", skill: "VOCAB" },
+      { id: "2", type: "FILL_BLANK", skill: "READING" },
+      { id: "3", type: "MATCHING", skill: "READING" },
+    ];
+
+    const session = generateShuffledSession(exercises, { biasSkill: "READING", seed: 10 });
+    expect(session[0].skill).toBe("READING");
   });
 });
 

@@ -1,28 +1,24 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Award } from "lucide-react";
+import { Award, Shield, Trophy } from "lucide-react";
 import { getClassForStudent, getRoster } from "@/lib/queries";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 import { StudentAvatar } from "@/components/student-avatar";
 import { Segmented } from "@/components/student/segmented";
 import { Mono, PageTitle } from "@/components/student/ui";
 
 export const dynamic = "force-dynamic";
 
-/**
- * Leaderboard, ported from the prototype's LeaderboardScreen: 240px podium
- * with the winner's column flexed to 1.1 and bars of 92/70/58px, then 60px
- * rows with a 19px rank number.
- *
- * "Total stars" ranks by the composite level score — the same number the
- * teacher and parent see.
- */
 export default async function RankPage({
   params,
   searchParams,
-}: PageProps<"/student/[studentId]/rank">) {
+}: {
+  params: Promise<{ studentId: string }>;
+  searchParams: Promise<{ tab?: string }>;
+}) {
   const { studentId } = await params;
   const { tab } = await searchParams;
-  const active = tab === "streak" ? "streak" : "stars";
+  const active = tab === "tier" ? "tier" : tab === "streak" ? "streak" : "stars";
 
   const klass = await getClassForStudent(studentId);
   if (!klass) notFound();
@@ -40,6 +36,16 @@ export default async function RankPage({
   const podium = [ranked[1], ranked[0], ranked[2]].filter(Boolean);
   const rest = ranked.slice(3);
 
+  const showTierTab = isFeatureEnabled("TIER_LEADERBOARD");
+
+  const tabsList = [
+    { key: "stars", label: "Total stars" },
+    { key: "streak", label: "Day streak" },
+  ];
+  if (showTierTab) {
+    tabsList.push({ key: "tier", label: "Tier League" });
+  }
+
   return (
     <div className="px-5 pb-[125px] pt-[18px]">
       <PageTitle>Leaderboard</PageTitle>
@@ -47,12 +53,23 @@ export default async function RankPage({
         <Segmented
           basePath={`/student/${studentId}/rank`}
           active={active}
-          tabs={[
-            { key: "stars", label: "Total stars" },
-            { key: "streak", label: "Day streak" },
-          ]}
+          tabs={tabsList}
         />
       </div>
+
+      {active === "tier" && (
+        <div className="mb-4 rounded-[2px] border-2 border-st-fg bg-st-peach p-3 text-center">
+          <div className="flex items-center justify-center gap-1.5 mb-1">
+            <Trophy size={16} className="text-st-primary" />
+            <span className="st-display text-[15px] font-bold text-st-fg">
+              Tier 1 — Nhóm CEFR A1 (Tuần này)
+            </span>
+          </div>
+          <Mono className="text-st-muted-fg block">
+            Top 20% thăng hạng • Nhóm 30 bạn cùng trình độ toàn hệ thống
+          </Mono>
+        </div>
+      )}
 
       <div className="mb-[14px] flex h-[240px] items-end gap-2 px-[3px]">
         {podium.map((s) => {
@@ -91,7 +108,11 @@ export default async function RankPage({
                 {s.name}
               </span>
               <Mono style={{ color: "var(--st-primary)" }}>
-                {active === "streak" ? `${s.streak} days` : `${value(s)} pts`}
+                {active === "streak"
+                  ? `${s.streak} days`
+                  : active === "tier"
+                    ? `${value(s) * 12} XP`
+                    : `${value(s)} pts`}
               </Mono>
               <span
                 className="mt-[5px] flex w-full items-end justify-center rounded-[2px] pb-2"
@@ -141,14 +162,14 @@ export default async function RankPage({
             <span className="min-w-0 flex-1">
               <span className="st-display mb-[3px] block truncate text-[14px] text-st-fg">
                 {s.name}
-                {me ? " · You" : ""}
+                {me ? " · Bạn" : ""}
               </span>
               <Mono className="block text-st-muted-fg">
                 {s.streak} day streak
               </Mono>
             </span>
             <Mono className="font-black" style={{ color: "var(--st-primary)" }}>
-              {value(s)}
+              {active === "tier" ? `${value(s) * 12} XP` : value(s)}
             </Mono>
           </Link>
         );

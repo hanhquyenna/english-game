@@ -4,6 +4,7 @@ import { ChevronRight, Home, Phone, ShoppingBag, User, Users, X } from "lucide-r
 import { getClassForStudent, getStudentSummary } from "@/lib/queries";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { StudentAvatar } from "@/components/student-avatar";
+import { HelpModal } from "@/components/student/help-modal";
 import { Mono, PageTitle, SectionLabel, Tile } from "@/components/student/ui";
 
 export const dynamic = "force-dynamic";
@@ -130,6 +131,9 @@ export default async function AccountPage({
           <ChevronRight size={17} style={{ color: "var(--st-muted-fg)" }} aria-hidden />
         </Link>
       </Tile>
+
+      {/* A10 Help Modal Component */}
+      <HelpModal studentId={studentId} teacherId={klass.teacher_id} />
     </div>
   );
 }

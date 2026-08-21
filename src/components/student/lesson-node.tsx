@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Lock, Play, Sparkle, Star } from "lucide-react";
 import type { PathNode } from "@/lib/lesson-path";
 import { cn } from "@/lib/utils";
 
@@ -6,25 +7,25 @@ type Topic = { id: string; title: string; assigned_at: string | null };
 
 const STATE_STYLE = {
   COMPLETED: {
-    icon: "⭐",
+    Icon: Star,
     label: "Đã xong",
     ring: "var(--success)",
     tint: "bg-[var(--success)]/8",
   },
   IN_PROGRESS: {
-    icon: "▶",
+    Icon: Play,
     label: "Đang học",
     ring: "var(--persona)",
     tint: "bg-[var(--persona-soft)]",
   },
   AVAILABLE: {
-    icon: "✦",
+    Icon: Sparkle,
     label: "Mở khoá",
     ring: "var(--persona)",
     tint: "bg-card",
   },
   LOCKED: {
-    icon: "🔒",
+    Icon: Lock,
     label: "Chưa mở",
     ring: "var(--muted-foreground)",
     tint: "bg-black/3",
@@ -68,7 +69,7 @@ export function LessonNode({
         style={{ backgroundColor: style.ring }}
         aria-hidden
       >
-        {style.icon}
+        <style.Icon size={22} />
       </span>
 
       <span className="min-w-0 flex-1">

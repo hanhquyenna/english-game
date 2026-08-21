@@ -7,6 +7,7 @@ import { GrammarEditor } from "@/components/teacher/grammar-editor";
 import { ExerciseEditor } from "@/components/teacher/exercise-editor";
 import { CreateExamButton } from "@/components/teacher/create-exam-button";
 import { AssignTopicButton } from "@/components/teacher/assign-topic-button";
+import { PageHeader } from "@/components/teacher/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const dynamic = "force-dynamic";
@@ -39,35 +40,35 @@ export default async function TopicBuilder({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <Link
-            href={`/teacher/${teacherId}/curriculum`}
-            className="text-sm text-muted-foreground hover:underline"
-          >
-            ← Chương trình
-          </Link>
-          <h2 className="mt-1 text-xl font-semibold">{topic.title}</h2>
-          <p className="text-sm text-muted-foreground">
-            {vocab?.length ?? 0} từ vựng · {grammar?.length ?? 0} điểm ngữ pháp ·{" "}
-            {exercises?.length ?? 0} bài tập
-            {topic.assigned_at ? " · đã giao cho lớp" : " · chưa giao"}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <CreateExamButton
-            classId={topic.class_id}
-            topicId={topic.id}
-            topicTitle={topic.title}
-            questionCount={gradable.length}
-          />
-          <AssignTopicButton
-            topicId={topic.id}
-            topicTitle={topic.title}
-            assigned={Boolean(topic.assigned_at)}
-            hasContent={(exercises?.length ?? 0) > 0}
-          />
-        </div>
+      <div>
+        <Link
+          href={`/teacher/${teacherId}/curriculum`}
+          className="text-sm text-muted-foreground hover:underline"
+        >
+          ← Chương trình
+        </Link>
+        <PageHeader
+          title={topic.title}
+          description={`${vocab?.length ?? 0} từ vựng · ${grammar?.length ?? 0} điểm ngữ pháp · ${
+            exercises?.length ?? 0
+          } bài tập${topic.assigned_at ? " · đã giao cho lớp" : " · chưa giao"}`}
+          action={
+            <>
+              <CreateExamButton
+                classId={topic.class_id}
+                topicId={topic.id}
+                topicTitle={topic.title}
+                questionCount={gradable.length}
+              />
+              <AssignTopicButton
+                topicId={topic.id}
+                topicTitle={topic.title}
+                assigned={Boolean(topic.assigned_at)}
+                hasContent={(exercises?.length ?? 0) > 0}
+              />
+            </>
+          }
+        />
       </div>
 
       <Card>

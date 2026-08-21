@@ -19,6 +19,7 @@ export type StudentSummary = {
   items: EquippedItem[];
   overrides: Partial<PeepConfig>;
   gems: number;
+  unreadCount?: number;
 };
 
 export async function getUsers() {
@@ -196,6 +197,7 @@ export async function getRoster(classId: string): Promise<StudentSummary[]> {
         items: avatar?.items ?? [],
         overrides: avatar?.overrides ?? {},
         gems: avatar?.gems ?? 0,
+        unreadCount: 0,
       };
     })
     .sort((a, b) => (b.level?.compositeScore ?? 0) - (a.level?.compositeScore ?? 0));
@@ -207,11 +209,17 @@ export async function getStudentSummary(
   const user = await getUser(studentId);
   if (!user) return null;
 
-  const [levels, practice, xp, avatars] = await Promise.all([
+  const db = createServerSupabase();
+  const [levels, practice, xp, avatars, { count }] = await Promise.all([
     getLatestLevels([studentId]),
     getPracticeDates([studentId]),
     getTotalXp([studentId]),
     getAvatars([studentId]),
+    db
+      .from("notifications")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", studentId)
+      .eq("read", false),
   ]);
 
   const dates = practice.get(studentId) ?? [];
@@ -230,6 +238,7 @@ export async function getStudentSummary(
     items: avatar?.items ?? [],
     overrides: avatar?.overrides ?? {},
     gems: avatar?.gems ?? 0,
+    unreadCount: count ?? 0,
   };
 }
 

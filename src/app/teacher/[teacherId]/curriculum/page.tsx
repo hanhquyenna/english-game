@@ -6,7 +6,9 @@ import {
 } from "@/lib/queries";
 import { AssignTopicButton } from "@/components/teacher/assign-topic-button";
 import { CreateTopicForm } from "@/components/teacher/create-topic-form";
+import { PageHeader } from "@/components/teacher/page-header";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export const dynamic = "force-dynamic";
 
@@ -22,13 +24,10 @@ export default async function CurriculumPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold">Chương trình lớp {klass.name}</h2>
-        <p className="text-sm text-muted-foreground">
-          Bài học đã giao sẽ mở khoá cho học sinh luyện tập và được tính vào
-          phần “chương trình” trong điểm trình độ.
-        </p>
-      </div>
+      <PageHeader
+        title={`Chương trình lớp ${klass.name}`}
+        description="Bài học đã giao sẽ mở khoá cho học sinh luyện tập và được tính vào phần chương trình trong điểm trình độ."
+      />
 
       <ul className="space-y-3">
         {topics.map((topic) => {
@@ -51,15 +50,9 @@ export default async function CurriculumPage({
                       >
                         {topic.title}
                       </Link>
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                          assigned
-                            ? "bg-[var(--success)]/12 text-[var(--success)]"
-                            : "bg-black/6 text-muted-foreground"
-                        }`}
-                      >
+                      <Badge variant={assigned ? "success" : "secondary"}>
                         {assigned ? "Đã giao" : "Chưa giao"}
-                      </span>
+                      </Badge>
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">
                       {c.vocab} từ vựng · {c.grammar} điểm ngữ pháp ·{" "}

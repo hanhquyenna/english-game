@@ -43,6 +43,59 @@ export async function recomputeAll() {
         `coverage ${r.coverageScore}  grammar ${r.grammarScore}`,
     );
   }
+
+  // C4: Weekly League Group Partitioning
+  console.log("\n--- Partitioning Weekly League Groups (C4) ---");
+  const today = new Date();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+  const weekStartDate = monday.toISOString().slice(0, 10);
+
+  // Group students by CEFR Band
+  const bandMap = new Map<string, { id: string; name: string }[]>();
+  for (const s of students ?? []) {
+    const { data: score } = await db
+      .from("level_scores")
+      .select("cefr_band")
+      .eq("student_id", s.id)
+      .maybeSingle();
+
+    const band = score?.cefr_band ?? "A1";
+    if (!bandMap.has(band)) bandMap.set(band, []);
+    bandMap.get(band)!.push(s);
+  }
+
+  for (const [band, bandStudents] of bandMap.entries()) {
+    // Partition into groups of 30
+    for (let i = 0; i < bandStudents.length; i += 30) {
+      const chunk = bandStudents.slice(i, i + 30);
+      const groupIndex = Math.floor(i / 30) + 1;
+
+      // Upsert league group
+      const { data: group } = await (db as any)
+        .from("league_groups")
+        .upsert(
+          { week_start_date: weekStartDate, cefr_band: band, group_index: groupIndex },
+          { onConflict: "week_start_date,cefr_band,group_index" },
+        )
+        .select("id")
+        .single();
+
+      if (group) {
+        for (const st of chunk) {
+          await (db as any).from("league_memberships").upsert(
+            {
+              league_group_id: group.id,
+              student_id: st.id,
+              xp_this_week: 0,
+            },
+            { onConflict: "league_group_id,student_id" },
+          );
+        }
+      }
+    }
+  }
+  console.log(`  Processed weekly league groups for week ${weekStartDate}.`);
 }
 
 // Only run automatically when invoked directly, so seed.ts can import it.

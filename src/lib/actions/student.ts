@@ -319,16 +319,25 @@ export async function submitJournal(
   studentId: string,
   topicId: string,
   text: string,
+  audioUrl?: string | null,
 ) {
   const db = createServerSupabase();
   const clean = text.trim();
-  if (clean.length < 10) {
-    throw new Error("Hãy viết ít nhất một vài câu (tối thiểu 10 ký tự)");
+  if (clean.length < 5 && !audioUrl) {
+    throw new Error("Hãy nhập ít nhất vài từ hoặc ghi âm bài làm");
   }
 
   const { error } = await db
     .from("journal_entries")
-    .insert({ student_id: studentId, topic_id: topicId, text: clean });
+    .insert({
+      student_id: studentId,
+      topic_id: topicId,
+      unit_id: topicId,
+      text: clean,
+      type: audioUrl ? "audio" : "text",
+      audio_url: audioUrl ?? null,
+      status: "submitted",
+    });
   if (error) throw new Error(error.message);
 
   const { data: parents } = await db
@@ -386,4 +395,39 @@ export async function markNotificationsRead(userId: string) {
     .eq("user_id", userId)
     .eq("read", false);
   revalidatePath("/", "layout");
+}
+
+export async function submitSpeakingAttempt(input: {
+  studentId: string;
+  lessonId: string;
+  audioUrl: string;
+  modelAudioUrl?: string | null;
+}) {
+  const db = createServerSupabase();
+  const { studentId, lessonId, audioUrl, modelAudioUrl } = input;
+
+  const { data: existing } = await db
+    .from("speaking_attempts")
+    .select("attempt_number")
+    .eq("student_id", studentId)
+    .eq("lesson_id", lessonId)
+    .order("attempt_number", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const attemptNumber = (existing?.attempt_number ?? 0) + 1;
+
+  const { error } = await db.from("speaking_attempts").insert({
+    student_id: studentId,
+    lesson_id: lessonId,
+    audio_url: audioUrl,
+    model_audio_url: modelAudioUrl ?? null,
+    overall_score: null, // No auto-score in v1 (§6.2)
+    attempt_number: attemptNumber,
+  });
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/", "layout");
+  return { success: true, message: "Đã gửi, chờ giáo viên nghe và chấm" };
 }

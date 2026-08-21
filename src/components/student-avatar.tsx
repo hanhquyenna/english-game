@@ -1,35 +1,38 @@
 "use client";
 
-import Peep from "react-peeps";
-import {
-  ASPECT,
-  INK,
-  peepWithOverrides,
-  VIEWBOX,
-  type EquippedItem,
-  type PeepConfig,
-} from "@/lib/peeps";
+import { npcSrc, type NpcCharacter } from "@/components/student/kenney-story-dialog";
 import { cn } from "@/lib/utils";
 
-export type { EquippedItem };
+export type EquippedItem = {
+  id: string;
+  label?: string;
+  icon: string;
+  slot: "hat" | "badge";
+  color?: string;
+};
+
+const CHARACTERS: NpcCharacter[] = [
+  "Female adventurer",
+  "Female person",
+  "Male adventurer",
+  "Male person",
+  "Robot",
+  "Zombie",
+];
+
+function getCharacterForSeed(seed: string): NpcCharacter {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash << 5) - hash + seed.charCodeAt(i);
+    hash |= 0;
+  }
+  const idx = Math.abs(hash) % CHARACTERS.length;
+  return CHARACTERS[idx];
+}
 
 /**
- * THE avatar component.
- *
- * Every character rendering in the product goes through here — home header,
- * avatar picker, shop preview and swatches, leaderboard rows and podium,
- * profile, teacher roster, parent screens. One component means one identity:
- * the same seed always produces the same person, so a student recognises
- * themselves everywhere instead of meeting a different mascot per screen.
- *
- * Characters are Open Peeps (Pablo Stanley, CC0) via `react-peeps` (MIT).
- * Items layered on top come from `public/assets/items` — see ATTRIBUTION.md.
- *
- * Note: react-peeps calls a hook, so this is a client component. Colours are
- * always plain strings, never gradient objects, because the library derives
- * gradient ids from Math.random() and that would break SSR hydration.
+ * Main student avatar component — renders Kenney Toon Characters.
  */
-
 export function StudentAvatar({
   seed,
   overrides,
@@ -39,109 +42,90 @@ export function StudentAvatar({
   ring,
   ringWidth = 3,
   glow,
-  background = "#f4f1ff",
+  background = "var(--st-peach)",
   shape = "circle",
   label,
   labelColor,
   className,
   title,
+  pose = "idle",
+  noFrame = false,
 }: {
-  /** Fixed identity. Never regenerate this for an existing student. */
   seed: string;
-  /** Customisations the student has chosen in the shop. */
-  overrides?: Partial<PeepConfig> | null;
+  overrides?: any;
   size?: number;
   variant?: "bust" | "full";
-  items?: EquippedItem[];
+  items?: any[];
   ring?: string | null;
   ringWidth?: number;
   glow?: string;
   background?: string | null;
-  /**
-   * Frame shape only — never affects the character itself. "square" is the
-   * near-square (radius 2) frame the student design uses; "circle" is the
-   * rounded frame the teacher and parent apps use.
-   */
   shape?: "circle" | "square";
-  /** Small pill under the character, e.g. the CEFR band. */
   label?: string | null;
   labelColor?: string;
   className?: string;
   title?: string;
+  pose?: string;
+  noFrame?: boolean;
 }) {
-  const peep = peepWithOverrides(seed, overrides);
-  const isFull = variant === "full";
+  const character: NpcCharacter =
+    overrides?.character && CHARACTERS.includes(overrides.character as NpcCharacter)
+      ? (overrides.character as NpcCharacter)
+      : getCharacterForSeed(seed || "default-student");
+
+  const characterSrc = npcSrc(pose, character);
+
+  const width = size;
+  const height = size;
 
   const hats = items.filter((i) => i.slot === "hat");
   const badges = items.filter((i) => i.slot === "badge");
-
-  // `size` is the height; a full-body figure is narrower than it is tall.
-  const width = size * ASPECT[variant];
-  const height = size;
 
   return (
     <span
       className={cn("relative inline-block shrink-0 align-middle", className)}
       style={{ width, height }}
-      title={title}
+      title={title || character}
     >
       <span
-        className="block size-full overflow-hidden"
+        className="block size-full overflow-hidden flex items-center justify-center relative p-0"
         style={{
-          borderRadius:
-            shape === "square" ? 2 : isFull ? 16 : "50%",
-          background: background ?? undefined,
-          border:
-            shape === "square" && ring
-              ? `${ringWidth}px solid ${ring}`
-              : undefined,
-          boxShadow:
-            shape === "square"
-              ? glow
-              : ring
-                ? `0 0 0 ${ringWidth}px ${ring}${glow ? `, ${glow}` : ""}`
-                : glow,
+          borderRadius: noFrame ? 0 : shape === "square" ? 4 : "50%",
+          background: noFrame ? "transparent" : (background ?? "var(--st-peach)"),
+          border: noFrame ? "none" : (ring ? `${ringWidth}px solid ${ring}` : "2px solid var(--st-fg)"),
+          boxShadow: noFrame ? "none" : (glow ? glow : "2px 2px 0 var(--st-fg)"),
         }}
       >
-        <Peep
-          style={{ width: "100%", height: "100%", display: "block" }}
-          viewBox={isFull ? VIEWBOX.full : VIEWBOX.bust}
-          hair={peep.hair}
-          face={peep.face}
-          body={isFull ? peep.stand : peep.body}
-          accessory={peep.accessory}
-          // backgroundColor fills the skin; strokeColor is the ink.
-          strokeColor={INK}
-          backgroundColor={peep.skin}
+        <img
+          src={characterSrc}
+          alt={character}
+          className="h-full w-full object-contain"
         />
       </span>
 
       {hats.map((item) => (
-        // eslint-disable-next-line @next/next/no-img-element
         <img
           key={item.icon}
           src={`/assets/items/${item.icon}.svg`}
           alt={item.label ?? ""}
           aria-hidden={!item.label}
-          className="pointer-events-none absolute"
+          className="pointer-events-none absolute z-10"
           style={{
-            width: width * 0.58,
-            height: width * 0.58,
+            width: width * 0.5,
+            height: width * 0.5,
             left: "50%",
-            top: isFull ? "-2%" : "-15%",
+            top: "-15%",
             transform: "translateX(-50%) rotate(-8deg)",
-            color: item.color ?? "#ffd54a",
-            filter: "drop-shadow(0 1px 1px rgba(0,0,0,.25))",
+            filter: "drop-shadow(0 1px 1px rgba(0,0,0,.3))",
           }}
         />
       ))}
 
       {badges.length > 0 ? (
         <span
-          className="absolute -bottom-1 -right-1 flex items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-black/5"
+          className="absolute -bottom-1 -right-1 flex items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-black/10 z-10"
           style={{ width: width * 0.4, height: width * 0.4 }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={`/assets/items/${badges[0].icon}.svg`}
             alt={badges[0].label ?? ""}
@@ -149,7 +133,6 @@ export function StudentAvatar({
             style={{
               width: "70%",
               height: "70%",
-              color: badges[0].color ?? "#534ab7",
             }}
           />
         </span>
@@ -157,8 +140,8 @@ export function StudentAvatar({
 
       {label ? (
         <span
-          className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 rounded-full px-1.5 py-px text-[10px] font-bold leading-tight text-white shadow-sm"
-          style={{ backgroundColor: labelColor ?? ring ?? "var(--persona)" }}
+          className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 rounded-full px-1.5 py-px text-[9px] font-black leading-tight text-white shadow-sm z-10 uppercase"
+          style={{ backgroundColor: labelColor ?? ring ?? "var(--st-primary)" }}
         >
           {label}
         </span>

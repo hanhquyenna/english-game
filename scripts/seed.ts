@@ -508,6 +508,8 @@ async function main() {
     { label: "Mũ hề", icon: "jester-hat", slot: "hat", rule: "streak:3", cost: 0 },
     { label: "Mũ tốt nghiệp", icon: "study-cap", slot: "hat", rule: "streak:7", cost: 150 },
     { label: "Vương miện", icon: "crown", slot: "hat", rule: "streak:14", cost: 300 },
+    { label: "Mũ Lễ Hội", icon: "jester-hat", slot: "hat", rule: "always", cost: 250 },
+    { label: "Vương Miện Vô Địch", icon: "crown", slot: "hat", rule: "league:champion", cost: 350 },
     { label: "Ngọn lửa 30 ngày", icon: "flame", slot: "badge", rule: "streak:30", cost: 0 },
     { label: "Huy chương", icon: "medal", slot: "badge", rule: "xp:250", cost: 100 },
     { label: "Ngọc quý", icon: "gem", slot: "badge", rule: "xp:500", cost: 200 },

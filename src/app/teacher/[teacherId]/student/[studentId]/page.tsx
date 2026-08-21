@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Check, X } from "lucide-react";
 import { getClassForTeacher, getStudentSummary, getTopicsWithProgress } from "@/lib/queries";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { gatherLevelInputs } from "@/lib/level-service";
@@ -9,6 +10,7 @@ import { LevelBar } from "@/components/level-bar";
 import { LevelBreakdownList, WeakestHint } from "@/components/level-breakdown";
 import { StreakPill } from "@/components/streak-pill";
 import { KudosButton } from "@/components/teacher/kudos-button";
+import { EmptyState } from "@/components/teacher/empty-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KUDOS_LABELS } from "@/lib/personas";
 import { formatMinutes, formatWhen } from "@/lib/format";
@@ -27,29 +29,70 @@ export default async function TeacherStudentPage({
   if (!student || !klass) notFound();
 
   const db = createServerSupabase();
-  const [inputs, topics, { data: kudos }, { data: journals }, { data: attempts }] =
-    await Promise.all([
-      gatherLevelInputs(db, studentId),
-      getTopicsWithProgress(klass.id, studentId),
-      db
-        .from("kudos")
-        .select("*")
-        .eq("student_id", studentId)
-        .order("created_at", { ascending: false })
-        .limit(8),
-      db
-        .from("journal_entries")
-        .select("*")
-        .eq("student_id", studentId)
-        .order("created_at", { ascending: false })
-        .limit(5),
-      db
-        .from("exercise_attempts")
-        .select("*")
-        .eq("student_id", studentId)
-        .order("attempted_at", { ascending: false })
-        .limit(8),
-    ]);
+  const topics = await getTopicsWithProgress(klass.id, studentId);
+  const topicIds = topics.map((t) => t.id);
+
+  const [
+    inputs,
+    { data: kudos },
+    { data: journals },
+    { data: attempts },
+    { data: vMasteryRaw },
+    { data: gMasteryRaw },
+    { data: vocabRaw },
+    { data: grammarRaw },
+  ] = await Promise.all([
+    gatherLevelInputs(db, studentId),
+    db
+      .from("kudos")
+      .select("*")
+      .eq("student_id", studentId)
+      .order("created_at", { ascending: false })
+      .limit(8),
+    db
+      .from("journal_entries")
+      .select("*")
+      .eq("student_id", studentId)
+      .order("created_at", { ascending: false })
+      .limit(5),
+    db
+      .from("exercise_attempts")
+      .select("*")
+      .eq("student_id", studentId)
+      .order("attempted_at", { ascending: false })
+      .limit(8),
+    db
+      .from("vocab_mastery")
+      .select("vocab_item_id, mastery_score")
+      .eq("student_id", studentId),
+    db
+      .from("grammar_mastery")
+      .select("grammar_point_id, mastery_score")
+      .eq("student_id", studentId),
+    topicIds.length
+      ? db.from("vocab_items").select("*").in("topic_id", topicIds)
+      : Promise.resolve({ data: [] }),
+    topicIds.length
+      ? db.from("grammar_points").select("*").in("topic_id", topicIds)
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  const vMasteryMap = new Map(
+    (vMasteryRaw ?? []).map((m) => [m.vocab_item_id, Number(m.mastery_score)]),
+  );
+  const gMasteryMap = new Map(
+    (gMasteryRaw ?? []).map((m) => [m.grammar_point_id, Number(m.mastery_score)]),
+  );
+
+  const allVocab = vocabRaw ?? [];
+  const allGrammar = grammarRaw ?? [];
+
+  const vMasteredCount = allVocab.filter(
+    (v) => (vMasteryMap.get(v.id) ?? 0) >= MASTERY_THRESHOLD,
+  ).length;
+  const gMasteredCount = allGrammar.filter(
+    (g) => (gMasteryMap.get(g.id) ?? 0) >= MASTERY_THRESHOLD,
+  ).length;
 
   const raw = {
     hours: formatMinutes(inputs.studyMinutes),
@@ -116,9 +159,7 @@ export default async function TeacherStudentPage({
                 </p>
               </>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                Chưa có dữ liệu trình độ.
-              </p>
+              <EmptyState text="Chưa có dữ liệu trình độ." />
             )}
           </CardContent>
         </Card>
@@ -168,14 +209,24 @@ export default async function TeacherStudentPage({
           </CardHeader>
           <CardContent>
             {(attempts ?? []).length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Chưa có lượt luyện tập nào.
-              </p>
+              <EmptyState text="Chưa có lượt luyện tập nào." />
             ) : (
               <ul className="space-y-1.5 text-sm">
                 {(attempts ?? []).map((a) => (
                   <li key={a.id} className="flex items-center gap-2">
-                    <span aria-hidden>{a.correct ? "✅" : "❌"}</span>
+                    {a.correct ? (
+                      <Check
+                        size={15}
+                        aria-hidden
+                        className="text-[var(--success)]"
+                      />
+                    ) : (
+                      <X
+                        size={15}
+                        aria-hidden
+                        className="text-[var(--danger)]"
+                      />
+                    )}
                     <span className="text-muted-foreground">
                       {a.correct ? "Trả lời đúng" : "Trả lời sai"}
                     </span>
@@ -217,9 +268,7 @@ export default async function TeacherStudentPage({
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                Chưa có tuyên dương nào.
-              </p>
+              <EmptyState text="Chưa có tuyên dương nào." />
             )}
 
             {(journals ?? []).length > 0 ? (
@@ -243,6 +292,67 @@ export default async function TeacherStudentPage({
             >
               Nhận xét bài viết ở Bảng tin →
             </Link>
+          </CardContent>
+        </Card>
+
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-base font-semibold">
+              Bảng phủ Từ vựng &amp; Ngữ pháp (Coverage Grid)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Từ vựng ({vMasteredCount}/{allVocab.length} thành thạo)
+              </h3>
+              <div className="flex flex-wrap gap-1.5">
+                {allVocab.map((v) => {
+                  const score = vMasteryMap.get(v.id) ?? 0;
+                  const isMastered = score >= MASTERY_THRESHOLD;
+                  return (
+                    <span
+                      key={v.id}
+                      className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium border ${
+                        isMastered
+                          ? "bg-emerald-50 text-emerald-800 border-emerald-300"
+                          : "bg-slate-50 text-slate-700 border-slate-200"
+                      }`}
+                      title={`${v.term}: ${v.meaning} (Điểm: ${score}/100)`}
+                    >
+                      {v.term}
+                      <span className="text-[10px] opacity-75">{score}%</span>
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Ngữ pháp ({gMasteredCount}/{allGrammar.length} thành thạo)
+              </h3>
+              <div className="flex flex-wrap gap-1.5">
+                {allGrammar.map((g) => {
+                  const score = gMasteryMap.get(g.id) ?? 0;
+                  const isMastered = score >= MASTERY_THRESHOLD;
+                  return (
+                    <span
+                      key={g.id}
+                      className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium border ${
+                        isMastered
+                          ? "bg-indigo-50 text-indigo-800 border-indigo-300"
+                          : "bg-slate-50 text-slate-700 border-slate-200"
+                      }`}
+                      title={`${g.name} (Điểm: ${score}/100)`}
+                    >
+                      {g.name}
+                      <span className="text-[10px] opacity-75">{score}%</span>
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

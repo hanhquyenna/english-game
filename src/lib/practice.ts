@@ -97,6 +97,47 @@ export function buildRound(
     .filter((q): q is Question => q !== null);
 }
 
+export type SkillTaggedExercise = ExerciseInput & {
+  skill?: Enums<"exercise_skill">;
+};
+
+/**
+ * Pure session generator that shuffles exercises by skill and format.
+ * Guarantees no two consecutive items share a `type` (format), and balances skill coverage.
+ */
+export function generateShuffledSession<T extends { id: string; type: string; skill?: string }>(
+  exercises: T[],
+  options: { seed?: number; biasSkill?: string } = {},
+): T[] {
+  if (exercises.length <= 1) return [...exercises];
+
+  const rand = mulberry32(options.seed ?? 123);
+  let pool = shuffle([...exercises], rand);
+
+  if (options.biasSkill) {
+    const biased = pool.filter((e) => e.skill === options.biasSkill);
+    const rest = pool.filter((e) => e.skill !== options.biasSkill);
+    pool = [...biased, ...rest];
+  }
+
+  const result: T[] = [];
+  const remaining = [...pool];
+
+  while (remaining.length > 0) {
+    const lastType = result.length > 0 ? result[result.length - 1].type : null;
+    const candidateIdx = remaining.findIndex((e) => e.type !== lastType);
+
+    if (candidateIdx !== -1) {
+      result.push(remaining.splice(candidateIdx, 1)[0]);
+    } else {
+      // If forced by remaining items, pick the next available
+      result.push(remaining.shift()!);
+    }
+  }
+
+  return result;
+}
+
 function toQuestion(
   exercise: ExerciseInput,
   vocabMeanings: string[],

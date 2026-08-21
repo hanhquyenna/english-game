@@ -136,4 +136,9 @@ describe("isUnlocked", () => {
     expect(isUnlocked("nonsense:1", ctx)).toBe(false);
     expect(isUnlocked("", ctx)).toBe(false);
   });
+
+  it("evaluates league placement rules", () => {
+    expect(isUnlocked("league:champion", { ...ctx, leagueTier: "champion" })).toBe(true);
+    expect(isUnlocked("league:champion", { ...ctx, leagueTier: "gold" })).toBe(false);
+  });
 });

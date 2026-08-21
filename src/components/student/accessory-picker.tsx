@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
+import { Lock } from "lucide-react";
 import { setEquippedAccessories } from "@/lib/actions/student";
 import { cn } from "@/lib/utils";
 
@@ -84,7 +85,7 @@ export function AccessoryPicker({
                   className={cn("text-2xl", !accessory.unlocked && "grayscale")}
                   aria-hidden
                 >
-                  {accessory.unlocked ? accessory.emoji : "🔒"}
+                  {accessory.unlocked ? accessory.emoji : <Lock size={20} className="inline text-st-muted-fg" />}
                 </span>
                 <span className="text-xs font-medium">{accessory.label}</span>
                 <span className="text-[11px] leading-tight text-muted-foreground">

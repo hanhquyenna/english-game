@@ -66,6 +66,7 @@ export function sliceForLevel<T>(exercises: T[], level: number): T[] {
 
 export function buildIslands(topics: TopicForIsland[]): Island[] {
   const assigned = topics.filter((t) => t.assigned_at);
+  let globalLessonCount = 0;
 
   return assigned.map((topic, i) => {
     const previous = i > 0 ? assigned[i - 1] : null;
@@ -81,9 +82,10 @@ export function buildIslands(topics: TopicForIsland[]): Island[] {
 
     const nodes: IslandNode[] = [];
     for (let lvl = 1; lvl <= LEVELS_PER_ISLAND; lvl++) {
+      globalLessonCount++;
       nodes.push({
         level: lvl,
-        label: `Level ${lvl}`,
+        label: `Lesson ${globalLessonCount}`,
         isExam: false,
         status: lvl <= done ? "done" : lvl === activeLevel ? "active" : "locked",
       });

@@ -1,8 +1,10 @@
+import { MessageSquare, Megaphone, Award } from "lucide-react";
 import { getClassForTeacher } from "@/lib/queries";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { KUDOS_LABELS } from "@/lib/personas";
 import { ClassPostForm } from "@/components/teacher/class-post-form";
 import { JournalCommentForm } from "@/components/teacher/journal-comment-form";
+import { EmptyState } from "@/components/teacher/empty-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatWhen } from "@/lib/format";
 
@@ -74,9 +76,10 @@ export default async function StoryPage({
         </CardHeader>
         <CardContent>
           {(journals ?? []).length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Chưa có bài viết nào. Học sinh viết sau khi hoàn thành một bài học.
-            </p>
+            <EmptyState
+              icon={MessageSquare}
+              text="Chưa có bài viết nào. Học sinh viết sau khi hoàn thành một bài học."
+            />
           ) : (
             <ul className="space-y-4">
               {(journals ?? []).map((entry) => (
@@ -107,9 +110,7 @@ export default async function StoryPage({
         </CardHeader>
         <CardContent>
           {(posts ?? []).length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Chưa có thông báo nào.
-            </p>
+            <EmptyState icon={Megaphone} text="Chưa có thông báo nào." />
           ) : (
             <ul className="space-y-3">
               {(posts ?? []).map((post) => (
@@ -131,9 +132,7 @@ export default async function StoryPage({
         </CardHeader>
         <CardContent>
           {(kudos ?? []).length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Chưa tuyên dương ai. Vào trang Lớp học để gửi.
-            </p>
+            <EmptyState icon={Award} text="Chưa tuyên dương ai. Vào trang Lớp học để gửi." />
           ) : (
             <ul className="space-y-2">
               {(kudos ?? []).map((k) => (

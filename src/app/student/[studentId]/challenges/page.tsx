@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Award, FileText } from "lucide-react";
+import { Award, FileText, LogOut, Sparkles } from "lucide-react";
 import { getClassForStudent, getTopicsWithProgress } from "@/lib/queries";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { Segmented } from "@/components/student/segmented";
@@ -26,11 +26,6 @@ type Row = {
   tint: string;
 };
 
-/**
- * Challenges, ported from the prototype's ChallengesScreen: page title, intro,
- * dismissible accent notification tile, segmented control, then 78px rows with
- * a 42px tinted icon square and a status chip.
- */
 export default async function ChallengesPage({
   params,
   searchParams,
@@ -114,9 +109,21 @@ export default async function ChallengesPage({
   const practisedToday = Number(today?.xp ?? 0) > 0;
 
   return (
-    <div className="px-5 pb-[30px] pt-[18px]">
-      <PageTitle>Challenges</PageTitle>
-      <PageIntro>Homework and exams, all in one place.</PageIntro>
+    <div className="pb-[30px] pt-2 space-y-4">
+      {/* FEATURE HEADER WITH QUIT TO MAIN MAP BUTTON */}
+      <div className="flex items-center justify-between border-b-2 border-st-fg pb-4">
+        <div>
+          <PageTitle>Challenges Guild</PageTitle>
+          <PageIntro>Homework and exams, all in one place.</PageIntro>
+        </div>
+
+        <Link href={`/student/${studentId}`}>
+          <button className="flex items-center gap-2 rounded-xl border-2 border-st-fg bg-st-primary px-4 py-2 text-xs font-black uppercase text-st-primary-fg shadow-md transition-transform active:scale-95">
+            <LogOut size={16} />
+            <span>QUIT TO MAP</span>
+          </button>
+        </Link>
+      </div>
 
       {!practisedToday ? <StreakTile /> : null}
 

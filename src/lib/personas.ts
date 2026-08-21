@@ -1,3 +1,13 @@
+import type { LucideIcon } from "lucide-react";
+import {
+  AlarmClock,
+  BookOpen,
+  FileCheck,
+  HeartCrack,
+  Megaphone,
+  Star,
+  TrendingUp,
+} from "lucide-react";
 import type { Enums } from "@/lib/database.types";
 
 export type Persona = "teacher" | "student" | "parent";
@@ -14,7 +24,7 @@ export const PERSONAS: Record<
 > = {
   teacher: {
     label: "Giáo viên",
-    accent: "#0f6e56",
+    accent: "#c75b39",
     blurb: "Xây chương trình, giao bài, chấm điểm, theo dõi cả lớp",
   },
   student: {
@@ -33,18 +43,23 @@ export function homeFor(persona: Persona, userId: string) {
   return `/${persona}/${userId}`;
 }
 
-/** Vietnamese labels for the notification feed. */
+/**
+ * Vietnamese labels for the notification feed, shared by every persona.
+ * Icons are lucide components rather than emoji — even on the student side,
+ * where the playful look lives in the path illustration itself
+ * (island-band.tsx), not in functional chrome like a notification bell.
+ */
 export const NOTIFICATION_LABELS: Record<
   Enums<"notification_type">,
-  { title: string; icon: string }
+  { title: string; icon: LucideIcon }
 > = {
-  NEW_ASSIGNMENT: { title: "Bài học mới được giao", icon: "📚" },
-  EXAM_RESULT: { title: "Có kết quả bài kiểm tra", icon: "📝" },
-  LEVEL_UP: { title: "Trình độ cập nhật", icon: "🎯" },
-  STREAK_AT_RISK: { title: "Streak sắp mất", icon: "⏰" },
-  STREAK_BROKEN: { title: "Streak đã mất", icon: "💔" },
-  KUDOS_RECEIVED: { title: "Được tuyên dương", icon: "⭐" },
-  CLASS_POST: { title: "Thông báo từ lớp", icon: "📣" },
+  NEW_ASSIGNMENT: { title: "Bài học mới được giao", icon: BookOpen },
+  EXAM_RESULT: { title: "Có kết quả bài kiểm tra", icon: FileCheck },
+  LEVEL_UP: { title: "Trình độ cập nhật", icon: TrendingUp },
+  STREAK_AT_RISK: { title: "Streak sắp mất", icon: AlarmClock },
+  STREAK_BROKEN: { title: "Streak đã mất", icon: HeartCrack },
+  KUDOS_RECEIVED: { title: "Được tuyên dương", icon: Star },
+  CLASS_POST: { title: "Thông báo từ lớp", icon: Megaphone },
 };
 
 export const KUDOS_LABELS: Record<Enums<"kudos_tag">, string> = {

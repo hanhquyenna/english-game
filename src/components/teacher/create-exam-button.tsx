@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { toast } from "sonner";
+import { FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createExam } from "@/lib/actions/teacher";
 
@@ -40,7 +41,14 @@ export function CreateExamButton({
         })
       }
     >
-      {pending ? "Đang tạo đề…" : `📝 Tạo đề (${questionCount} câu)`}
+      {pending ? (
+        "Đang tạo đề…"
+      ) : (
+        <>
+          <FileText size={14} aria-hidden />
+          {`Tạo đề (${questionCount} câu)`}
+        </>
+      )}
     </Button>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
+import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -49,7 +50,8 @@ export function KudosButton({
     <Dialog open={open} onOpenChange={setOpen}>
       {/* Base UI composes via `render`, not Radix's `asChild`. */}
       <DialogTrigger render={<Button variant="outline" size="sm" />}>
-        ⭐ Tuyên dương
+        <Star size={14} aria-hidden />
+        Tuyên dương
       </DialogTrigger>
 
       <DialogContent>

@@ -39,7 +39,7 @@ export function VocabEditor({
               <div className="min-w-0 flex-1">
                 <p>
                   <span className="font-semibold">{item.term}</span>
-                  <span className="text-muted-foreground"> — {item.meaning}</span>
+                  <span className="text-muted-foreground">: {item.meaning}</span>
                 </p>
                 {item.example ? (
                   <p className="mt-0.5 text-xs italic text-muted-foreground">

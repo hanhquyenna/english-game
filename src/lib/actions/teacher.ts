@@ -244,27 +244,32 @@ export async function deleteExercise(exerciseId: string) {
 /** Build an exam from a topic's MCQ exercises and publish it to the class. */
 export async function createExam(
   classId: string,
-  topicId: string,
   title: string,
+  topicId?: string | null,
+  exerciseIds?: string[],
 ) {
   const db = createServerSupabase();
 
-  const { data: exercises } = await db
-    .from("exercises")
-    .select("id")
-    .eq("topic_id", topicId)
-    .in("type", ["MCQ", "FILL_BLANK"]);
+  let ids = exerciseIds ?? [];
+  if (ids.length === 0 && topicId) {
+    const { data: exercises } = await db
+      .from("exercises")
+      .select("id")
+      .eq("topic_id", topicId)
+      .in("type", ["MCQ", "FILL_BLANK"]);
 
-  const ids = (exercises ?? []).map((e) => e.id);
+    ids = (exercises ?? []).map((e) => e.id);
+  }
+
   if (ids.length === 0) {
-    throw new Error("Bài học này chưa có câu hỏi nào để ra đề");
+    throw new Error("Cần chọn ít nhất 1 câu hỏi để ra đề");
   }
 
   const { data, error } = await db
     .from("exams")
     .insert({
       class_id: classId,
-      topic_id: topicId,
+      topic_id: topicId || null,
       title: title.trim() || "Bài kiểm tra",
       exercise_ids: ids as Json,
       published_at: new Date().toISOString(),
@@ -522,4 +527,117 @@ async function applyGrammarGain(
     })),
     { onConflict: "student_id,grammar_point_id" },
   );
+}
+
+export async function approveJournalEntry(input: {
+  entryId: string;
+  starRating?: number;
+  comment?: string;
+}) {
+  const db = createServerSupabase();
+  const { entryId, starRating, comment } = input;
+
+  const { data: entry } = await db
+    .from("journal_entries")
+    .select("id, student_id, status")
+    .eq("id", entryId)
+    .maybeSingle();
+
+  if (!entry) throw new Error("Không tìm thấy bài nhật ký");
+
+  const now = new Date().toISOString();
+  await db
+    .from("journal_entries")
+    .update({
+      status: "approved",
+      approved_at: now,
+      star_rating: starRating ?? 5,
+      teacher_comment: comment?.trim() ?? null,
+    })
+    .eq("id", entryId);
+
+  // FRS §6.3: Approved -> +10 XP + 5 gems
+  if (entry.status !== "approved") {
+    await db.from("xp_ledger").insert({
+      student_id: entry.student_id,
+      source: "journal_approved",
+      amount: 10,
+      ref_id: entry.id,
+    });
+
+    const { data: avatar } = await db
+      .from("student_avatars")
+      .select("gems")
+      .eq("student_id", entry.student_id)
+      .maybeSingle();
+
+    if (avatar) {
+      await db
+        .from("student_avatars")
+        .update({ gems: (avatar.gems ?? 0) + 5 })
+        .eq("student_id", entry.student_id);
+    }
+  }
+
+  revalidatePath("/", "layout");
+  return { success: true };
+}
+
+export async function rejectJournalEntry(entryId: string, comment?: string) {
+  const db = createServerSupabase();
+
+  const { data: entry } = await db
+    .from("journal_entries")
+    .select("id, student_id")
+    .eq("id", entryId)
+    .maybeSingle();
+
+  if (!entry) throw new Error("Không tìm thấy bài nhật ký");
+
+  await db
+    .from("journal_entries")
+    .update({
+      status: "rejected",
+      teacher_comment: comment?.trim() ?? "Cần viết lại rõ ràng hơn.",
+    })
+    .eq("id", entryId);
+
+  revalidatePath("/", "layout");
+  return { success: true };
+}
+
+export async function gradeSpeakingAttempt(input: {
+  attemptId: string;
+  score: number;
+  comment?: string;
+}) {
+  const db = createServerSupabase();
+  const { attemptId, score, comment } = input;
+
+  const { data: attempt } = await db
+    .from("speaking_attempts")
+    .select("id, student_id")
+    .eq("id", attemptId)
+    .maybeSingle();
+
+  if (!attempt) throw new Error("Không tìm thấy bài luyện nói");
+
+  await db
+    .from("speaking_attempts")
+    .update({
+      overall_score: score,
+    })
+    .eq("id", attemptId);
+
+  // Award XP based on score
+  const xpAmount = Math.max(5, Math.round(score * 0.5));
+  await db.from("xp_ledger").insert({
+    student_id: attempt.student_id,
+    source: "speaking_graded",
+    amount: xpAmount,
+    ref_id: attempt.id,
+  });
+
+  revalidatePath("/", "layout");
+  return { success: true };
 }

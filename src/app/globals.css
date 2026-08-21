@@ -244,13 +244,13 @@
 }
 
 [data-persona="teacher"] {
-  --persona: #0f6e56;
+  --persona: #c75b39;
   --persona-foreground: #ffffff;
-  --persona-soft: color-mix(in oklab, #0f6e56 10%, white);
-  --persona-border: color-mix(in oklab, #0f6e56 22%, white);
-  --primary: #0f6e56;
+  --persona-soft: color-mix(in oklab, #c75b39 10%, white);
+  --persona-border: color-mix(in oklab, #c75b39 22%, white);
+  --primary: #c75b39;
   --primary-foreground: #ffffff;
-  --ring: #0f6e56;
+  --ring: #c75b39;
   /* Teacher/parent stay flatter and denser. */
   --radius: 0.5rem;
 }

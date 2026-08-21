@@ -5,8 +5,16 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { createExercise, deleteExercise } from "@/lib/actions/teacher";
 import { DeleteButton } from "@/components/teacher/vocab-editor";
+import { EmptyState } from "@/components/teacher/empty-state";
 import type { Enums } from "@/lib/database.types";
 import { cn } from "@/lib/utils";
 
@@ -112,9 +120,7 @@ export function ExerciseEditor({
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-muted-foreground">
-          Chưa có bài tập luyện nào ngoài thẻ từ vựng.
-        </p>
+        <EmptyState text="Chưa có bài tập luyện nào ngoài thẻ từ vựng." />
       )}
 
       <form
@@ -291,19 +297,22 @@ export function ExerciseEditor({
             <Label htmlFor="ex-grammar" className="mb-1.5 block">
               Gắn với điểm ngữ pháp (không bắt buộc)
             </Label>
-            <select
-              id="ex-grammar"
-              value={grammarPointId}
-              onChange={(e) => setGrammarPointId(e.target.value)}
-              className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+            <Select
+              value={grammarPointId || "none"}
+              onValueChange={(v) => setGrammarPointId(v === "none" || !v ? "" : v)}
             >
-              <option value="">— Không gắn —</option>
-              {grammarPoints.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.name}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger id="ex-grammar" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">(Không gắn)</SelectItem>
+                {grammarPoints.map((g) => (
+                  <SelectItem key={g.id} value={g.id}>
+                    {g.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <p className="mt-1 text-xs text-muted-foreground">
               Bài tập gắn với ngữ pháp sẽ nâng điểm “ngữ pháp” của học sinh khi
               làm đúng.
@@ -342,7 +351,7 @@ function ExercisePreview({
       <>
         <p>{String(content.prompt ?? "")}</p>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          Đáp án: <span className="font-medium">{options[idx] ?? "—"}</span>
+          Đáp án: <span className="font-medium">{options[idx] ?? "Chưa có đáp án"}</span>
         </p>
       </>
     );

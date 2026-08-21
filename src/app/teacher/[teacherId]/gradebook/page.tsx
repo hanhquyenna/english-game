@@ -1,6 +1,9 @@
+import { ClipboardCheck } from "lucide-react";
 import { getClassForTeacher } from "@/lib/queries";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { GradeRow } from "@/components/teacher/grade-row";
+import { EmptyState } from "@/components/teacher/empty-state";
+import { PageHeader } from "@/components/teacher/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const dynamic = "force-dynamic";
@@ -43,22 +46,22 @@ export default async function GradebookPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold">Chấm bài</h2>
-        <p className="text-sm text-muted-foreground">
-          {ungradedTotal === 0
+      <PageHeader
+        title="Chấm bài"
+        description={`${
+          ungradedTotal === 0
             ? "Không còn bài nào chờ chấm."
-            : `${ungradedTotal} bài đang chờ chấm.`}{" "}
-          Chấm xong sẽ cập nhật ngay điểm trình độ của học sinh và báo cho phụ
-          huynh.
-        </p>
-      </div>
+            : `${ungradedTotal} bài đang chờ chấm.`
+        } Chấm xong sẽ cập nhật ngay điểm trình độ của học sinh và báo cho phụ huynh.`}
+      />
 
       {(exams ?? []).length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          Chưa có đề kiểm tra nào. Vào một bài học trong Chương trình và bấm “Tạo
-          đề”.
-        </p>
+        <Card>
+          <EmptyState
+            icon={ClipboardCheck}
+            text="Chưa có đề kiểm tra nào. Vào một bài học trong Chương trình và bấm “Tạo đề”."
+          />
+        </Card>
       ) : null}
 
       {(exams ?? []).map((exam) => {
@@ -81,9 +84,7 @@ export default async function GradebookPage({
             </CardHeader>
             <CardContent className="space-y-2">
               {subs.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  Chưa có học sinh nào nộp bài.
-                </p>
+                <EmptyState text="Chưa có học sinh nào nộp bài." />
               ) : (
                 <ul className="divide-y rounded-md border">
                   {subs.map((sub) => (

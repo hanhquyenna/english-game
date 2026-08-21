@@ -45,6 +45,8 @@ export const metadata: Metadata = {
     "Luyện tập tiếng Anh mỗi ngày theo đúng chương trình trên lớp — trình độ CEFR thật, minh bạch, cập nhật theo thời gian thực.",
 };
 
+import { ToastContainer } from "@/components/ui/toast-container";
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
@@ -54,6 +56,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col bg-canvas">
         {children}
         <Toaster position="top-center" richColors />
+        <ToastContainer />
       </body>
     </html>
   );

@@ -82,6 +82,7 @@ export type UnlockContext = {
   totalXp: number;
   cefrBand: string;
   bandRank: number;
+  leagueTier?: string;
 };
 
 export function isUnlocked(rule: string, ctx: UnlockContext): boolean {
@@ -96,6 +97,8 @@ export function isUnlocked(rule: string, ctx: UnlockContext): boolean {
       const needed = order.indexOf(value);
       return needed >= 0 && ctx.bandRank >= needed;
     }
+    case "league":
+      return (ctx.leagueTier ?? "").toLowerCase() === (value ?? "").toLowerCase();
     case "always":
       return true;
     default:

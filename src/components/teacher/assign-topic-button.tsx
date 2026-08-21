@@ -54,7 +54,7 @@ export function AssignTopicButton({
       title={
         hasContent
           ? undefined
-          : "Bài học chưa có bài tập nào — thêm nội dung trước khi giao"
+          : "Bài học chưa có bài tập nào: thêm nội dung trước khi giao"
       }
       onClick={() =>
         start(async () => {

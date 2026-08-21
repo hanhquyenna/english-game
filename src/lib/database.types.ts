@@ -243,6 +243,7 @@ export type Database = {
           created_by_teacher_id: string | null
           grammar_point_id: string | null
           id: string
+          skill: Database["public"]["Enums"]["exercise_skill"] | null
           topic_id: string
           type: Database["public"]["Enums"]["exercise_type"]
           vocab_item_id: string | null
@@ -253,6 +254,7 @@ export type Database = {
           created_by_teacher_id?: string | null
           grammar_point_id?: string | null
           id?: string
+          skill?: Database["public"]["Enums"]["exercise_skill"] | null
           topic_id: string
           type: Database["public"]["Enums"]["exercise_type"]
           vocab_item_id?: string | null
@@ -263,6 +265,7 @@ export type Database = {
           created_by_teacher_id?: string | null
           grammar_point_id?: string | null
           id?: string
+          skill?: Database["public"]["Enums"]["exercise_skill"] | null
           topic_id?: string
           type?: Database["public"]["Enums"]["exercise_type"]
           vocab_item_id?: string | null
@@ -371,28 +374,49 @@ export type Database = {
       }
       journal_entries: {
         Row: {
+          approved_at: string | null
+          audio_url: string | null
           created_at: string
           id: string
+          star_rating: number | null
+          status: string
           student_id: string
           teacher_comment: string | null
+          teacher_comment_audio_url: string | null
           text: string
           topic_id: string | null
+          type: string
+          unit_id: string | null
         }
         Insert: {
+          approved_at?: string | null
+          audio_url?: string | null
           created_at?: string
           id?: string
+          star_rating?: number | null
+          status?: string
           student_id: string
           teacher_comment?: string | null
+          teacher_comment_audio_url?: string | null
           text: string
           topic_id?: string | null
+          type?: string
+          unit_id?: string | null
         }
         Update: {
+          approved_at?: string | null
+          audio_url?: string | null
           created_at?: string
           id?: string
+          star_rating?: number | null
+          status?: string
           student_id?: string
           teacher_comment?: string | null
+          teacher_comment_audio_url?: string | null
           text?: string
           topic_id?: string | null
+          type?: string
+          unit_id?: string | null
         }
         Relationships: [
           {
@@ -500,6 +524,153 @@ export type Database = {
           },
         ]
       }
+      messages: {
+        Row: {
+          body: string
+          class_id: string
+          created_at: string
+          id: string
+          sender_id: string
+          student_id: string
+          teacher_id: string
+        }
+        Insert: {
+          body: string
+          class_id: string
+          created_at?: string
+          id?: string
+          sender_id: string
+          student_id: string
+          teacher_id: string
+        }
+        Update: {
+          body?: string
+          class_id?: string
+          created_at?: string
+          id?: string
+          sender_id?: string
+          student_id?: string
+          teacher_id?: string
+        }
+        Relationships: []
+      }
+      class_post_comments: {
+        Row: {
+          author_id: string
+          body: string
+          class_post_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          class_post_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          class_post_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      material_folders: {
+        Row: {
+          class_id: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      materials: {
+        Row: {
+          cefr_level: string
+          class_id: string
+          created_at: string
+          file_type: string
+          file_url: string
+          folder_id: string | null
+          id: string
+          title: string
+          topic_id: string | null
+        }
+        Insert: {
+          cefr_level?: string
+          class_id: string
+          created_at?: string
+          file_type?: string
+          file_url: string
+          folder_id?: string | null
+          id?: string
+          title: string
+          topic_id?: string | null
+        }
+        Update: {
+          cefr_level?: string
+          class_id?: string
+          created_at?: string
+          file_type?: string
+          file_url?: string
+          folder_id?: string | null
+          id?: string
+          title?: string
+          topic_id?: string | null
+        }
+        Relationships: []
+      }
+      lesson_plans: {
+        Row: {
+          activities: string
+          created_at: string
+          homework: string
+          id: string
+          materials: string
+          objectives: string
+          teacher_id: string
+          title: string
+          topic_id: string | null
+        }
+        Insert: {
+          activities: string
+          created_at?: string
+          homework: string
+          id?: string
+          materials: string
+          objectives: string
+          teacher_id: string
+          title: string
+          topic_id?: string | null
+        }
+        Update: {
+          activities?: string
+          created_at?: string
+          homework?: string
+          id?: string
+          materials?: string
+          objectives?: string
+          teacher_id?: string
+          title?: string
+          topic_id?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -571,6 +742,8 @@ export type Database = {
           current_rank_frame_id: string | null
           equipped_accessory_ids: Json
           gems: number
+          last_weekly_bonus_claimed_at: string | null
+          last_vault_review_bonus_at: string | null
           peep_overrides: Json
           student_id: string
           unlocked_accessory_ids: Json
@@ -580,6 +753,8 @@ export type Database = {
           current_rank_frame_id?: string | null
           equipped_accessory_ids?: Json
           gems?: number
+          last_weekly_bonus_claimed_at?: string | null
+          last_vault_review_bonus_at?: string | null
           peep_overrides?: Json
           student_id: string
           unlocked_accessory_ids?: Json
@@ -589,6 +764,8 @@ export type Database = {
           current_rank_frame_id?: string | null
           equipped_accessory_ids?: Json
           gems?: number
+          last_weekly_bonus_claimed_at?: string | null
+          last_vault_review_bonus_at?: string | null
           peep_overrides?: Json
           student_id?: string
           unlocked_accessory_ids?: Json
@@ -609,6 +786,153 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      speaking_attempts: {
+        Row: {
+          attempt_number: number
+          audio_url: string
+          created_at: string
+          id: string
+          lesson_id: string | null
+          model_audio_url: string | null
+          overall_score: number | null
+          student_id: string
+        }
+        Insert: {
+          attempt_number?: number
+          audio_url: string
+          created_at?: string
+          id?: string
+          lesson_id?: string | null
+          model_audio_url?: string | null
+          overall_score?: number | null
+          student_id: string
+        }
+        Update: {
+          attempt_number?: number
+          audio_url?: string
+          created_at?: string
+          id?: string
+          lesson_id?: string | null
+          model_audio_url?: string | null
+          overall_score?: number | null
+          student_id?: string
+        }
+        Relationships: []
+      }
+      xp_ledger: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          ref_id: string | null
+          source: string
+          student_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          ref_id?: string | null
+          source: string
+          student_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          ref_id?: string | null
+          source?: string
+          student_id?: string
+        }
+        Relationships: []
+      }
+      vocab_review_log: {
+        Row: {
+          created_at: string
+          id: string
+          next_review_at: string
+          result: string
+          student_id: string
+          vocab_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          next_review_at: string
+          result: string
+          student_id: string
+          vocab_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          next_review_at?: string
+          result?: string
+          student_id?: string
+          vocab_id?: string
+        }
+        Relationships: []
+      }
+      cefr_thresholds: {
+        Row: {
+          band: string
+          xp_required: number
+        }
+        Insert: {
+          band: string
+          xp_required: number
+        }
+        Update: {
+          band?: string
+          xp_required?: number
+        }
+        Relationships: []
+      }
+      avatar_items: {
+        Row: {
+          asset_url: string
+          category: string
+          id: string
+          price_gems: number
+          title: string
+          z_index: number
+        }
+        Insert: {
+          asset_url: string
+          category: string
+          id?: string
+          price_gems?: number
+          title?: string
+          z_index?: number
+        }
+        Update: {
+          asset_url?: string
+          category?: string
+          id?: string
+          price_gems?: number
+          title?: string
+          z_index?: number
+        }
+        Relationships: []
+      }
+      student_avatar_ownership: {
+        Row: {
+          avatar_item_id: string
+          purchased_at: string
+          student_id: string
+        }
+        Insert: {
+          avatar_item_id: string
+          purchased_at?: string
+          student_id: string
+        }
+        Update: {
+          avatar_item_id?: string
+          purchased_at?: string
+          student_id?: string
+        }
+        Relationships: []
       }
       study_sessions: {
         Row: {
@@ -788,6 +1112,7 @@ export type Database = {
           created_at: string
           example: string | null
           id: string
+          image_url: string | null
           meaning: string
           term: string
           topic_id: string
@@ -797,6 +1122,7 @@ export type Database = {
           created_at?: string
           example?: string | null
           id?: string
+          image_url?: string | null
           meaning: string
           term: string
           topic_id: string
@@ -806,6 +1132,7 @@ export type Database = {
           created_at?: string
           example?: string | null
           id?: string
+          image_url?: string | null
           meaning?: string
           term?: string
           topic_id?: string
@@ -819,6 +1146,117 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      submissions_v2: {
+        Row: {
+          content: string | null
+          created_at: string
+          duration_seconds: number | null
+          file_size_bytes: number | null
+          id: string
+          media_mime_type: string | null
+          media_url: string | null
+          score: number | null
+          source_ref_id: string | null
+          source_type: string
+          star_rating: number | null
+          status: string
+          student_id: string
+          teacher_comment: string | null
+          teacher_comment_media_url: string | null
+          teacher_comment_type: string | null
+          type: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          file_size_bytes?: number | null
+          id?: string
+          media_mime_type?: string | null
+          media_url?: string | null
+          score?: number | null
+          source_ref_id?: string | null
+          source_type: string
+          star_rating?: number | null
+          status?: string
+          student_id: string
+          teacher_comment?: string | null
+          teacher_comment_media_url?: string | null
+          teacher_comment_type?: string | null
+          type: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          file_size_bytes?: number | null
+          id?: string
+          media_mime_type?: string | null
+          media_url?: string | null
+          score?: number | null
+          source_ref_id?: string | null
+          source_type?: string
+          star_rating?: number | null
+          status?: string
+          student_id?: string
+          teacher_comment?: string | null
+          teacher_comment_media_url?: string | null
+          teacher_comment_type?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
+      assignment_configs: {
+        Row: {
+          allowed_types: Json
+          id: string
+          lesson_content_id: string | null
+          max_audio_duration_seconds: number | null
+          max_file_size_mb: number | null
+          max_video_duration_seconds: number | null
+        }
+        Insert: {
+          allowed_types?: Json
+          id?: string
+          lesson_content_id?: string | null
+          max_audio_duration_seconds?: number | null
+          max_file_size_mb?: number | null
+          max_video_duration_seconds?: number | null
+        }
+        Update: {
+          allowed_types?: Json
+          id?: string
+          lesson_content_id?: string | null
+          max_audio_duration_seconds?: number | null
+          max_file_size_mb?: number | null
+          max_video_duration_seconds?: number | null
+        }
+        Relationships: []
+      }
+      arena_topics: {
+        Row: {
+          created_at: string
+          id: string
+          level_range: string
+          title: string
+          unlock_threshold: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          level_range?: string
+          title: string
+          unlock_threshold?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          level_range?: string
+          title?: string
+          unlock_threshold?: number
+        }
+        Relationships: []
       }
       vocab_mastery: {
         Row: {
@@ -898,6 +1336,8 @@ export type Database = {
     Enums: {
       avatar_category: "BASE" | "ACCESSORY" | "RANK_FRAME"
       exercise_type: "MCQ" | "FILL_BLANK" | "MATCHING" | "VOCAB_CARD"
+      exercise_skill: "VOCAB" | "GRAMMAR" | "READING" | "LISTENING" | "WRITING" | "SPEAKING"
+      topic_source: "school" | "library"
       kudos_tag: "HARD_WORK" | "TEAMWORK" | "PERSISTENCE" | "ON_TASK" | "CUSTOM"
       notification_type:
         | "NEW_ASSIGNMENT"

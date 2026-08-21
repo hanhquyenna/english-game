@@ -1,20 +1,24 @@
+import { AlertTriangle, Flame, HeartCrack, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { StreakState } from "@/lib/progression";
 
-const COPY: Record<StreakState, { label: string; icon: string; tone: string }> = {
+const COPY: Record<
+  StreakState,
+  { label: string; icon: LucideIcon; tone: string }
+> = {
   ACTIVE_TODAY: {
     label: "đã học hôm nay",
-    icon: "🔥",
+    icon: Flame,
     tone: "bg-[var(--success)]/12 text-[var(--success)]",
   },
   AT_RISK: {
     label: "chưa học hôm nay",
-    icon: "⏰",
+    icon: AlertTriangle,
     tone: "bg-[var(--warning)]/16 text-[color-mix(in_oklab,var(--warning)_75%,black)]",
   },
   BROKEN: {
     label: "đã mất streak",
-    icon: "💔",
+    icon: HeartCrack,
     tone: "bg-[var(--danger)]/10 text-[var(--danger)]",
   },
 };
@@ -37,7 +41,7 @@ export function StreakPill({
         className,
       )}
     >
-      <span aria-hidden>{copy.icon}</span>
+      <copy.icon size={13} aria-hidden />
       <span className="font-bold tabular-nums">{streak}</span>
       <span className="font-normal opacity-80">ngày</span>
       <span className="sr-only">, {copy.label}</span>

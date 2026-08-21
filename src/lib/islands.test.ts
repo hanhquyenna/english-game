@@ -128,6 +128,19 @@ describe("buildIslands", () => {
     expect(islands[2].unlocked).toBe(true); // 43% clears the 40% gate
     expect(islands[2].activeLevel).toBe(1);
   });
+
+  it("numbers lessons continuously across multiple islands", () => {
+    const islands = buildIslands([
+      topic("1", "Unit 1", 100),
+      topic("2", "Unit 2", 50),
+    ]);
+    expect(islands[0].nodes[0].label).toBe("Lesson 1");
+    expect(islands[0].nodes[5].label).toBe("Lesson 6");
+    expect(islands[0].nodes[6].label).toBe("Exam");
+    expect(islands[1].nodes[0].label).toBe("Lesson 7");
+    expect(islands[1].nodes[5].label).toBe("Lesson 12");
+    expect(islands[1].nodes[6].label).toBe("Exam");
+  });
 });
 
 describe("currentPosition", () => {
