@@ -42,3 +42,7 @@ next-env.d.ts
 
 # keep the example env template tracked
 !.env.example
+
+# temporary/archive directory
+_to_delete/
+

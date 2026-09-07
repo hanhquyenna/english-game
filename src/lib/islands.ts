@@ -12,12 +12,12 @@
 
 import { UNLOCK_THRESHOLD } from "@/lib/lesson-path";
 
-export const LEVELS_PER_ISLAND = 6;
+export const LEVELS_PER_ISLAND = 8;
 
 export type NodeStatus = "done" | "active" | "locked";
 
 export type IslandNode = {
-  /** 1-6 for levels; null for the exam node. */
+  /** 1-8 for levels; null for the exam node. */
   level: number | null;
   label: string;
   status: NodeStatus;
@@ -47,21 +47,22 @@ export type TopicForIsland = {
   hasExam: boolean;
 };
 
-/** How many of the six levels a percentage covers. */
+/** How many of the eight levels a percentage covers. */
 export function levelsDone(percentComplete: number): number {
   const clamped = Math.max(0, Math.min(100, percentComplete));
   return Math.floor((clamped / 100) * LEVELS_PER_ISLAND);
 }
 
 /**
- * Which exercises belong to a level. The topic's exercises are split into six
+ * Which exercises belong to a level. The topic's exercises are split into eight
  * contiguous slices, so "Level 3" always means the same questions.
  */
 export function sliceForLevel<T>(exercises: T[], level: number): T[] {
-  if (exercises.length === 0) return [];
+  if (exercises.length === 0 || level < 1 || level > LEVELS_PER_ISLAND) return [];
   const per = Math.ceil(exercises.length / LEVELS_PER_ISLAND);
   const start = (level - 1) * per;
-  return exercises.slice(start, start + per);
+  if (start >= exercises.length) return [];
+  return exercises.slice(start, Math.min(exercises.length, start + per));
 }
 
 export function buildIslands(topics: TopicForIsland[]): Island[] {

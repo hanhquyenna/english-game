@@ -263,7 +263,7 @@ export function MaterialsClient({
               }`}
             >
               <CardContent className="flex items-center gap-3 p-4">
-                <Folder className="size-8 text-amber-600 shrink-0" />
+                <Folder className="size-8 text-warning shrink-0" />
                 <div className="min-w-0">
                   <p className="font-semibold text-sm truncate">{f.name}</p>
                   <p className="text-xs text-muted-foreground">{f.count} tài liệu</p>

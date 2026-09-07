@@ -36,7 +36,7 @@ export default async function StudentPortfolioDetailPage({
       <div className="flex items-center gap-3">
         <Link
           href={`/teacher/${teacherId}/portfolio`}
-          className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition-colors"
+          className="p-2 bg-muted hover:bg-muted/80 text-foreground rounded-lg transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
         </Link>

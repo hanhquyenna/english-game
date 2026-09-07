@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { getClassForStudent, getTopicsWithProgress } from "@/lib/queries";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { buildLessonPath } from "@/lib/lesson-path";
@@ -71,9 +72,9 @@ export default async function PracticePage({
         </Mono>
         <Link
           href={`/student/${studentId}`}
-          className="st-mono mt-4 inline-block font-black uppercase tracking-[0.6px] text-st-primary"
+          className="st-mono mt-4 inline-flex items-center gap-1.5 font-black uppercase tracking-[0.6px] text-st-primary"
         >
-          ← Quay lại hành trình
+          <ArrowLeft className="h-3.5 w-3.5" /> Quay lại hành trình
         </Link>
       </Tile>
     );
@@ -118,9 +119,9 @@ export default async function PracticePage({
         </Mono>
         <Link
           href={`/student/${studentId}`}
-          className="st-mono mt-4 inline-block font-black uppercase tracking-[0.6px] text-st-primary"
+          className="st-mono mt-4 inline-flex items-center gap-1.5 font-black uppercase tracking-[0.6px] text-st-primary"
         >
-          ← Quay lại hành trình
+          <ArrowLeft className="h-3.5 w-3.5" /> Quay lại hành trình
         </Link>
       </Tile>
     );

@@ -10,7 +10,7 @@ import { Mono, PageTitle, SectionLabel, Tile } from "@/components/student/ui";
 export const dynamic = "force-dynamic";
 
 /**
- * Account, ported from the prototype's AccountScreen: title with a close ✕,
+ * Account, ported from the prototype's AccountScreen: title with a close (X) icon,
  * an identity card, then a single tile of rows divided by hairlines.
  * Every row is backed by a real record.
  */

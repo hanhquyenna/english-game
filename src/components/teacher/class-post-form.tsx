@@ -42,7 +42,7 @@ export function ClassPostForm({
     <Card>
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
-          <Megaphone className="w-5 h-5 text-sky-400" />
+          <Megaphone className="w-5 h-5 text-persona" />
           <span>Đăng thông báo cho lớp</span>
         </CardTitle>
         <p className="text-sm text-muted-foreground">
@@ -64,7 +64,7 @@ export function ClassPostForm({
             type="button"
             disabled={!text.trim()}
             onClick={() => setShowPreview(true)}
-            className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs"
           >
             <Eye className="w-4 h-4 mr-1.5" />Xem trước &amp; Đăng thông báo
           </Button>
@@ -74,26 +74,26 @@ export function ClassPostForm({
       {/* B4 Preview Modal before actual POST */}
       {showPreview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-slate-900 border-2 border-slate-700 text-white p-5 rounded-2xl w-full max-w-md shadow-2xl space-y-4 relative">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <span className="text-xs uppercase font-extrabold text-sky-400 tracking-wider">
+          <div className="bg-card border-2 border-border text-foreground p-5 rounded-2xl w-full max-w-md shadow-2xl space-y-4 relative">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <span className="text-xs uppercase font-extrabold text-persona tracking-wider">
                 Xem trước thông báo (Preview)
               </span>
               <button
                 type="button"
                 onClick={() => setShowPreview(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-full"
+                className="text-muted-foreground hover:text-foreground p-1 rounded-full"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-4 bg-slate-800/90 border border-slate-700/80 rounded-xl space-y-2">
+            <div className="p-4 bg-muted/90 border border-border/80 rounded-xl space-y-2">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-amber-300">Cô giáo (Thông báo lớp)</span>
-                <span className="text-[10px] text-slate-400 font-mono">Vừa xong</span>
+                <span className="text-xs font-bold text-foreground">Cô giáo (Thông báo lớp)</span>
+                <span className="text-[10px] text-muted-foreground font-mono">Vừa xong</span>
               </div>
-              <p className="text-sm font-medium text-slate-100 leading-relaxed whitespace-pre-wrap">
+              <p className="text-sm font-medium text-foreground leading-relaxed whitespace-pre-wrap">
                 {text}
               </p>
             </div>
@@ -101,14 +101,14 @@ export function ClassPostForm({
             <div className="flex gap-2 pt-2">
               <StateButton
                 onClickAction={handleConfirmPost}
-                className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase"
+                className="flex-1 bg-success hover:bg-success/90 text-white font-black text-xs uppercase"
               >
                 <Send className="w-4 h-4 mr-1" /> Xác nhận đăng
               </StateButton>
               <button
                 type="button"
                 onClick={() => setShowPreview(false)}
-                className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs flex items-center gap-1"
+                className="px-4 py-2.5 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-bold rounded-xl text-xs flex items-center gap-1"
               >
                 <Edit3 className="w-3.5 h-3.5" /> Sửa lại
               </button>

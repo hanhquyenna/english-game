@@ -30,14 +30,18 @@ export function StudentShell({
     "messages",
   ]);
 
-  const isGameHome = pathname === base || pathname === `${base}/`;
+  const isFullBleed =
+    pathname === base ||
+    pathname === `${base}/` ||
+    pathname?.endsWith("/class-map") ||
+    pathname?.endsWith("/learn-map");
 
   return (
     <div
       data-persona="student"
       className={cn(
         "flex flex-1 flex-col bg-st-bg text-st-fg min-h-screen",
-        isGameHome ? "w-full" : "w-full max-w-6xl mx-auto px-4 md:px-8 py-4"
+        isFullBleed ? "w-full p-0 max-w-none" : "w-full max-w-6xl mx-auto px-4 md:px-8 py-4"
       )}
     >
       <main className="flex-1">{children}</main>

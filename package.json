@@ -1,16 +1,18 @@
 {
-  "name": "beeblast",
+  "name": "english-game",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint && bash scripts/lint-tokens.sh",
     "test": "vitest run",
     "test:watch": "vitest",
     "seed": "tsx scripts/seed.ts",
-    "recompute": "tsx scripts/recompute.ts"
+    "recompute": "tsx scripts/recompute.ts",
+    "lint:tokens": "bash scripts/lint-tokens.sh",
+    "verify": "npm run lint:tokens && npm run test"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

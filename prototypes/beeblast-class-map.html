@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Beeblast — Lộ trình lớp 4A</title>
+<style>
+/* ===========================================================================
+   Beeblast class map — demo prototype.
+
+   No external assets: every tile, tree, building and character is drawn
+   procedurally on a 2D canvas. That means no sprite sheet to download, no
+   licence to track, and nothing to go 404 in a demo. It also keeps the whole
+   thing inside one file.
+
+   Palette is the student app's own design system (globals.css,
+   [data-persona="student"]) extended with the few natural hues a village needs.
+   Nothing here invents a new accent.
+   =========================================================================== */
+:root{
+  /* ---- straight from the app's student tokens ---- */
+  --st-bg:#efe3cf; --st-card:#f4ecdd; --st-fg:#2c231c;
+  --st-primary:#c75b39; --st-primary-fg:#f4ecdd;
+  --st-secondary:#8e9c77; --st-muted:#e3d4ba; --st-muted-fg:#7c5a3a;
+  --st-accent:#d9a441; --st-peach:#f4d9c8; --st-destructive:#a94631;
+  --st-input:#c7b59a;
+  /* ---- village hues, all derived to sit on the cream base ---- */
+  --grass-1:#a1b07e; --grass-2:#96a675; --grass-3:#8a9a6b;
+  --path-1:#d9c39a;  --path-2:#c7b59a;
+  --water-1:#88aeb0; --water-2:#6f989c;
+  --tree-1:#87a26c;  --tree-2:#6c8859; --tree-3:#55704a;
+  --stone:#b9a98d;
+  --ink:#2c231c;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+/* FONTS — deliberately NOT the app's ui-monospace stack for Vietnamese text.
+   Monospace faces (SF Mono, DejaVu Sans Mono, Consolas) have patchy Latin
+   Extended Additional coverage, so "SƠ ĐỒ" and "CẤP" fall back mid-word and
+   render with stray backticks and floating tone marks. A sans stack with real
+   Vietnamese coverage fixes it. Monospace is kept for ASCII digits only, via
+   .num — that is where the mono look actually earns its keep. */
+body{
+  background:var(--st-bg); color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",
+              "Liberation Sans","DejaVu Sans",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.num{font-family:ui-monospace,SFMono-Regular,Menlo,"DejaVu Sans Mono",monospace;
+     font-variant-numeric:tabular-nums}
+.display{font-family:Georgia,"Iowan Old Style","DejaVu Serif",serif;font-weight:800}
+.mono{font-size:10px;letter-spacing:.4px;text-transform:uppercase;line-height:1.35}
+
+#stage{position:fixed;inset:0}
+#map{display:block;width:100%;height:100%;image-rendering:pixelated;cursor:grab}
+#map.dragging{cursor:grabbing}
+
+/* --- the brutalist tile idiom from the app: 2px ink border, hard offset shadow, near-square corners --- */
+.tile{
+  background:var(--st-card); border:2px solid var(--ink); border-radius:2px;
+  box-shadow:3px 3px 0 0 var(--ink);
+}
+
+/* =========================== HUD ============================ */
+.hud{position:absolute;pointer-events:none}
+.hud>*{pointer-events:auto}
+
+/* top-left: who you are */
+#player{top:10px;left:10px;display:flex;gap:8px;align-items:center;padding:7px 10px 7px 7px}
+#player .face{width:34px;height:34px;border:2px solid var(--ink);border-radius:2px;background:var(--st-peach);flex:0 0 auto}
+#player .who{line-height:1.15}
+#player .nm{font-size:12px;font-weight:700}
+#player .lv{font-size:9px;color:var(--st-muted-fg);letter-spacing:.5px;text-transform:uppercase}
+.xp{margin-top:3px;width:104px;height:7px;background:var(--st-muted);border:1.5px solid var(--ink);border-radius:2px;overflow:hidden}
+.xp i{display:block;height:100%;background:linear-gradient(90deg,#d9a441,#c75b39)}
+
+/* top-right: world state chips */
+#chips{top:10px;right:10px;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:60vw}
+.chip{display:flex;align-items:center;gap:5px;padding:5px 9px;font-size:11px;font-weight:700;background:var(--st-card);border:2px solid var(--ink);border-radius:2px;box-shadow:2px 2px 0 0 var(--ink)}
+.chip .ic{width:12px;height:12px;flex:0 0 auto}
+
+/* class-wide progress: co-operative framing, deliberately not a ranking */
+#classbar{top:56px;right:10px;width:200px;padding:8px 10px}
+#classbar .hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+#classbar .hd b{font-size:11px}
+#classbar .hd span{font-size:9px;color:var(--st-muted-fg)}
+.pbar{height:9px;background:var(--st-muted);border:1.5px solid var(--ink);border-radius:2px;overflow:hidden}
+.pbar i{display:block;height:100%;background:repeating-linear-gradient(45deg,var(--st-secondary) 0 5px,#7d8a68 5px 10px)}
+
+/* right: quest panel */
+#quests{top:112px;right:10px;width:200px;padding:9px 10px;max-height:44vh;overflow:auto}
+#quests h3{font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:var(--st-muted-fg);margin-bottom:7px}
+.q{display:flex;gap:7px;padding:6px 0;border-top:1.5px dashed var(--st-input)}
+.q:first-of-type{border-top:0}
+.q .dot{width:9px;height:9px;margin-top:3px;border:1.5px solid var(--ink);border-radius:2px;flex:0 0 auto}
+.q .t{font-size:11px;font-weight:700;line-height:1.25}
+.q .s{font-size:9px;color:var(--st-muted-fg);margin-top:2px}
+
+/* bottom-left: tool belt */
+#belt{bottom:12px;left:10px;display:flex;gap:6px}
+.tool{width:42px;height:42px;display:grid;place-items:center;background:var(--st-card);border:2px solid var(--ink);border-radius:2px;box-shadow:3px 3px 0 0 var(--ink);transition:transform .09s,box-shadow .09s}
+.tool:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 0 var(--ink)}
+.tool:active{transform:translate(2px,2px);box-shadow:1px 1px 0 0 var(--ink)}
+.tool svg{width:19px;height:19px}
+.tool b{position:absolute;margin:-26px 0 0 26px;font-size:8px;background:var(--st-primary);color:var(--st-primary-fg);border:1.5px solid var(--ink);border-radius:2px;padding:0 3px}
+
+/* bottom-right: minimap */
+#mini{bottom:12px;right:10px;width:128px;padding:6px}
+#mini canvas{display:block;width:100%;height:74px;image-rendering:pixelated;border:1.5px solid var(--ink);border-radius:2px}
+#mini .cap{font-size:8px;letter-spacing:.5px;text-transform:uppercase;color:var(--st-muted-fg);margin-top:4px;text-align:center}
+
+/* view toggle */
+#view{bottom:64px;left:10px;display:flex;border:2px solid var(--ink);border-radius:2px;box-shadow:3px 3px 0 0 var(--ink);overflow:hidden}
+#view button{font:inherit;font-size:10px;letter-spacing:.4px;text-transform:uppercase;padding:6px 9px;border:0;background:var(--st-card);color:var(--st-muted-fg);cursor:pointer}
+#view button+button{border-left:2px solid var(--ink)}
+#view button[aria-pressed="true"]{background:var(--st-primary);color:var(--st-primary-fg)}
+
+/* node dialog */
+#dlg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(320px,88vw);padding:0;display:none;z-index:20}
+#dlg.on{display:block;animation:pop .3s cubic-bezier(.2,.9,.3,1.2) both}
+@keyframes pop{0%{transform:translate(-50%,-50%) scale(.86);opacity:0}60%{transform:translate(-50%,-50%) scale(1.04);opacity:1}100%{transform:translate(-50%,-50%) scale(1)}}
+#dlg .top{display:flex;gap:10px;padding:11px;border-bottom:2px solid var(--ink);background:var(--st-peach)}
+#dlg canvas{width:56px;height:56px;image-rendering:pixelated;border:2px solid var(--ink);border-radius:2px;background:var(--st-card);flex:0 0 auto}
+#dlg .ttl{font-size:14px;line-height:1.2}
+#dlg .sub{font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:var(--st-muted-fg);margin-top:3px}
+#dlg .body{padding:11px;font-size:12px;line-height:1.45}
+#dlg .who{margin-top:9px;font-size:10px;color:var(--st-muted-fg)}
+#dlg .act{display:flex;gap:8px;padding:0 11px 11px}
+#dlg .act button{flex:1;font:inherit;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:9px;border:2px solid var(--ink);border-radius:2px;background:var(--st-primary);color:var(--st-primary-fg);box-shadow:3px 3px 0 0 var(--ink);cursor:pointer}
+#dlg .act button.ghost{flex:0 0 46px;background:var(--st-card);color:var(--st-muted-fg)}
+#dlg .act button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 0 var(--ink)}
+
+/* mobile: fold the side panels away so the map keeps the screen */
+@media (max-width:700px){
+  #classbar{top:auto;bottom:106px;right:10px;left:10px;width:auto}
+  #quests{display:none}
+  #mini{display:none}
+  #chips{max-width:52vw}
+  #view{bottom:auto;top:96px;left:10px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="map"></canvas>
+
+  <div class="hud tile" id="player">
+    <canvas class="face" id="face" width="34" height="34"></canvas>
+    <div class="who">
+      <div class="nm">Minh</div>
+      <div class="lv">Cấp 7 · Thợ săn từ</div>
+      <div class="xp"><i style="width:62%"></i></div>
+    </div>
+  </div>
+
+  <div class="hud" id="chips">
+    <div class="chip"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#c75b39" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>12</div>
+    <div class="chip"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#d9a441" stroke-width="2.4" stroke-linejoin="round"><path d="M6 3h12l4 6-10 13L2 9z"/><path d="M2 9h20M12 22 8 9l4-6 4 6-4 13"/></svg>849</div>
+    <div class="chip"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#8e9c77" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>20</div>
+  </div>
+
+  <div class="hud tile" id="classbar">
+    <div class="hd"><b>Lớp 4A</b><span>5/9 mở</span></div>
+    <div class="pbar"><i style="width:56%"></i></div>
+  </div>
+
+  <div class="hud tile" id="quests">
+    <h3>Việc của em</h3>
+    <div class="q"><i class="dot" style="background:var(--st-accent)"></i><div><div class="t">Thử thách 6</div><div class="s">Đang làm · 4/8 câu</div></div></div>
+    <div class="q"><i class="dot" style="background:var(--st-secondary)"></i><div><div class="t">Đọc truyện</div><div class="s">Cô Linh giao · còn 2 ngày</div></div></div>
+    <div class="q"><i class="dot" style="background:var(--st-muted)"></i><div><div class="t">Ôn 8 từ</div><div class="s">Kho từ · tới hạn ôn</div></div></div>
+    <div class="q"><i class="dot" style="background:var(--st-muted)"></i><div><div class="t">Trùm cuối</div><div class="s">Cần xong 8 thử thách</div></div></div>
+  </div>
+
+  <div class="hud" id="view">
+    <button id="bIso" aria-pressed="true">Làng</button>
+    <button id="bFlat" aria-pressed="false">Sơ đồ</button>
+  </div>
+
+  <div class="hud" id="belt">
+    <div class="tile tool" title="Luyện nói"><svg viewBox="0 0 24 24" fill="none" stroke="#2c231c" stroke-width="2" stroke-linecap="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></svg></div>
+    <div class="tile tool" title="Ôn luyện"><svg viewBox="0 0 24 24" fill="none" stroke="#2c231c" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg><b>3</b></div>
+    <div class="tile tool" title="Thư viện"><svg viewBox="0 0 24 24" fill="none" stroke="#2c231c" stroke-width="2" stroke-linecap="round"><path d="M3 4h6a3 3 0 0 1 3 3v13a2.5 2.5 0 0 0-2.5-2.5H3z"/><path d="M21 4h-6a3 3 0 0 0-3 3v13a2.5 2.5 0 0 1 2.5-2.5H21z"/></svg></div>
+    <div class="tile tool" title="Thú cưng"><svg viewBox="0 0 24 24" fill="none" stroke="#2c231c" stroke-width="2" stroke-linecap="round"><path d="M12 21c-4 0-7-2.5-7-6 0-2 1-3.5 2.5-4.5C9 9.5 10.5 9 12 9s3 .5 4.5 1.5C18 11.5 19 13 19 15c0 3.5-3 6-7 6z"/><circle cx="7" cy="6" r="2.2"/><circle cx="17" cy="6" r="2.2"/></svg></div>
+  </div>
+
+  <div class="hud tile" id="mini">
+    <canvas id="minic" width="256" height="148"></canvas>
+    <div class="cap">Bản đồ lớp</div>
+  </div>
+
+  <div class="tile" id="dlg">
+    <div class="top">
+      <canvas id="npc" width="28" height="28"></canvas>
+      <div><div class="ttl display" id="dTtl">Thử thách 6</div><div class="sub" id="dSub">Đang mở</div></div>
+    </div>
+    <div class="body"><span id="dBody"></span><div class="who" id="dWho"></div></div>
+    <div class="act"><button id="dGo">Vào thử thách</button><button class="ghost" id="dNo">✕</button></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================================
+   Deterministic PRNG. Scenery must not reshuffle on every repaint, and a
+   stable seed also means a screenshot is comparable run to run.
+   ========================================================================== */
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const rnd = mulberry(20260821);
+
+const FS='system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans","Liberation Sans","DejaVu Sans",sans-serif';
+const FD='Georgia,"Iowan Old Style","DejaVu Serif",serif';
+const C={bg:'#efe3cf',card:'#f4ecdd',ink:'#2c231c',pri:'#c75b39',sec:'#8e9c77',
+  mut:'#e3d4ba',mutfg:'#7c5a3a',acc:'#d9a441',peach:'#f4d9c8',dest:'#a94631',
+  g1:'#a1b07e',g2:'#96a675',g3:'#8a9a6b',p1:'#d9c39a',p2:'#c7b59a',
+  w1:'#88aeb0',w2:'#6f989c',t1:'#87a26c',t2:'#6c8859',t3:'#55704a',stone:'#b9a98d'};
+
+/* ---- isometric grid ---- */
+const GW=34, GH=34, TW=56, TH=28;          // tile width / height, classic 2:1
+const iso=(gx,gy)=>({x:(gx-gy)*TW/2, y:(gx+gy)*TH/2});
+
+/* ---- the path: 9 stops, 8 challenges + 1 boss, winding so it reads as a place ---- */
+const STOPS=[
+  {g:[7,26],  n:1}, {g:[10,25],n:2}, {g:[12,22],n:3}, {g:[15,21],n:4},
+  {g:[17,18], n:5}, {g:[20,17],n:6}, {g:[22,14],n:7}, {g:[25,11],n:8},
+  {g:[27,8],  n:9, boss:true}
+];
+const STATE=['done','done','done','done','done','active','locked','locked','locked'];
+const NAMES=['Chào hỏi','Gia đình','Màu sắc','Con số','Đồ ăn','Trường học','Thời tiết','Sở thích','TRÙM CUỐI'];
+
+/* walkable path cells, straight-then-turn between consecutive stops */
+const path=new Set();
+for(let i=0;i<STOPS.length-1;i++){
+  let [ax,ay]=STOPS[i].g, [bx,by]=STOPS[i+1].g;
+  for(let x=Math.min(ax,bx);x<=Math.max(ax,bx);x++) path.add(x+','+ay);
+  for(let y=Math.min(ay,by);y<=Math.max(ay,by);y++) path.add(bx+','+y);
+}
+STOPS.forEach(s=>path.add(s.g[0]+','+s.g[1]));
+/* Widen to two cells. A one-cell path reads as a dotted line of sand rather
+   than a road you could walk down, which was the single biggest reason the
+   first pass still looked like circles on a background. */
+[...path].forEach(k=>{const[a,b]=k.split(',').map(Number);path.add((a+1)+','+b)});
+/* A small clearing around each stop, so buildings sit on ground rather than
+   in the middle of grass with no approach. */
+STOPS.forEach(s=>{[[0,0],[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>
+  path.add((s.g[0]+dx)+','+(s.g[1]+dy)))});
+
+/* ---- scenery: trees and a pond, kept off the path ---- */
+const water=new Set();
+for(let x=6;x<13;x++) for(let y=10;y<17;y++){
+  const d=Math.hypot(x-9.5,y-13.5); if(d<3.1 && !path.has(x+','+y)) water.add(x+','+y);
+}
+/* Trees are decided per tile from the position hash rather than held in a
+   list. That is what lets the ground be drawn for whatever the viewport
+   happens to cover — the world has no edges to run out of, so there is no
+   cream void to fall into at any zoom or pan. */
+function treeAt(gx,gy){
+  const k=gx+','+gy;
+  if(path.has(k)||water.has(k)||shoreHas(k)) return null;
+  for(const st of STOPS){ if(Math.abs(st.g[0]-gx)<3 && Math.abs(st.g[1]-gy)<3) return null; }
+  // clearing either side of the road
+  for(let dx=-2;dx<=2;dx++) for(let dy=-2;dy<=2;dy++)
+    if(path.has((gx+dx)+','+(gy+dy))) return null;
+  const d=h2(gx*5.11,gy*9.37);
+  // cluster: thicker where the low-frequency field is high, so trees form
+  // groves and open meadows instead of even static
+  const dens=0.66+vnoise(gx*0.22,gy*0.22)*0.26;
+  if(d<dens) return null;
+  return {x:gx,y:gy,s:0.8+h2(gx*2.7,gy*4.1)*0.45,t:h2(gx*7.3,gy*1.9)};
+}
+
+/* ---- 20 classmates, positioned by their own progress ---- */
+const VN=['Bảo','An','Chi','Dũng','Hà','Hùng','Khánh','Lan','Linh','Mai',
+          'Nam','Ngọc','Phúc','Quân','Sơn','Thảo','Trang','Tú','Vy','Yến'];
+const mates=VN.map((nm,i)=>{
+  const r=rnd();
+  // most of the class clusters around the middle of the path, a few ahead, a few behind
+  let stop = r<0.12?1 : r<0.5?4 : r<0.82?5 : r<0.95?6 : 7;
+  return {nm, stop, hue:(i*47)%360, hat:i%4, shirt:i%5};
+});
+const ME={nm:'Minh', stop:5};
+
+/* ============================ rendering ============================ */
+const cv=document.getElementById('map');
+let cx=cv.getContext('2d');
+function cxSet(c){cx=c}
+let DPR=1, W=0, H=0, cam={x:0,y:0}, flat=false, t=0, Z=1;
+
+function resize(){
+  DPR=Math.min(devicePixelRatio||1,2);
+  W=cv.clientWidth; H=cv.clientHeight;
+  cv.width=Math.floor(W*DPR); cv.height=Math.floor(H*DPR);
+  cx.setTransform(DPR,0,0,DPR,0,0); cx.imageSmoothingEnabled=false;
+  /* Zoom so the village fills the frame instead of floating in a cream void.
+     Wide screens get pushed in harder — at 1440px the whole 26×26 island fits
+     with room to spare, which reads as a diorama on a desk, not a place. */
+  const wide = W>860;
+  if(wide){
+    // frame the full path: fit its bounding box with margin for the side panels
+    const ps=STOPS.map(s=>iso(...s.g));
+    const x0=Math.min(...ps.map(p=>p.x)), x1=Math.max(...ps.map(p=>p.x));
+    const y0=Math.min(...ps.map(p=>p.y)), y1=Math.max(...ps.map(p=>p.y));
+    Z=Math.min((W-380)/(x1-x0+260), (H-200)/(y1-y0+300));
+    Z=Math.max(0.75,Math.min(Z,1.6));
+    cam.x=(x0+x1)/2 - 70;   // nudge left, the quest panel eats the right edge
+    cam.y=(y0+y1)/2 - 20;
+  } else {
+    Z = W>560 ? 1.25 : 1.1;
+    const a=iso(...STOPS[5].g); cam.x=a.x; cam.y=a.y;
+  }
+  drawMini();
+}
+addEventListener('resize',resize);
+
+function diamond(x,y,w,h){cx.beginPath();cx.moveTo(x,y-h/2);cx.lineTo(x+w/2,y);cx.lineTo(x,y+h/2);cx.lineTo(x-w/2,y);cx.closePath()}
+
+/* Value noise. The one-liner sin-hash used before produced visible diagonal
+   banding — big light and dark rectangles that read as a rendering artifact
+   rather than as grass. Two octaves of a hashed lattice with smooth
+   interpolation gives soft patches instead. */
+function shoreHas(k){return typeof shore!=='undefined'&&shore.has(k)}
+function h2(x,y){const s=Math.sin(x*127.1+y*311.7)*43758.5453;return s-Math.floor(s)}
+function vnoise(x,y){
+  const xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi;
+  const u=xf*xf*(3-2*xf), v=yf*yf*(3-2*yf);
+  return (h2(xi,yi)*(1-u)+h2(xi+1,yi)*u)*(1-v)
+       + (h2(xi,yi+1)*(1-u)+h2(xi+1,yi+1)*u)*v;
+}
+const shore=new Set();
+water.forEach(k=>{const[a,b]=k.split(',').map(Number);
+  [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]].forEach(([dx,dy])=>{
+    const n=(a+dx)+','+(b+dy); if(!water.has(n)) shore.add(n);})});
+
+function groundTile(gx,gy){
+  const k=gx+','+gy, p=iso(gx,gy);
+  let top, side;
+  if(water.has(k)){
+    return;                       // handled by pond(), one merged surface
+  } else if(path.has(k)){
+    const n=vnoise(gx*1.4,gy*1.4);
+    top = n>0.55 ? C.p1 : '#d0b992';
+    side = '#b09a76';
+  } else {
+    const n = vnoise(gx*0.34,gy*0.34)*0.7 + vnoise(gx*0.9,gy*0.9)*0.3;
+    top = n>0.60 ? C.g1 : n>0.40 ? C.g2 : C.g3;
+    side = n>0.60 ? '#7c8a60' : n>0.40 ? '#748158' : '#6b7851';
+  }
+  diamond(p.x,p.y,TW,TH); cx.fillStyle=top; cx.fill();
+  if(side){
+    // a 5px skirt gives the ground body without paying for real geometry
+    cx.beginPath();
+    cx.moveTo(p.x-TW/2,p.y); cx.lineTo(p.x,p.y+TH/2); cx.lineTo(p.x+TW/2,p.y);
+    cx.lineTo(p.x+TW/2,p.y+5); cx.lineTo(p.x,p.y+TH/2+5); cx.lineTo(p.x-TW/2,p.y+5);
+    cx.closePath(); cx.fillStyle=side; cx.fill();
+  }
+  if(shore.has(k)){ // sandy rim so the pond has a bank instead of a hard cut
+    diamond(p.x,p.y,TW,TH); cx.fillStyle='rgba(217,195,154,.55)'; cx.fill();
+  }
+  // scattered tufts and flowers: cheap detail that kills the flat-tile look
+  if(side && !path.has(k)){
+    const d=h2(gx*3.3,gy*7.7);
+    if(d>0.93){ cx.fillStyle='#f4d9c8'; cx.fillRect(p.x-1,p.y-2,2,2);
+                cx.fillRect(p.x+6,p.y+2,2,2); }
+    else if(d>0.84){ cx.strokeStyle='rgba(87,99,74,.7)'; cx.lineWidth=1;
+      cx.beginPath(); cx.moveTo(p.x-4,p.y+1); cx.lineTo(p.x-4,p.y-3);
+      cx.moveTo(p.x,p.y+2); cx.lineTo(p.x,p.y-2); cx.stroke(); }
+  }
+}
+
+/* The pond, drawn as a single clipped surface so no tile seams show through. */
+function pondBase(){
+  if(!water.size) return;
+  cx.save();
+  cx.beginPath();
+  water.forEach(k=>{const[a,b]=k.split(',').map(Number);const p=iso(a,b);
+    cx.moveTo(p.x,p.y-TH/2);cx.lineTo(p.x+TW/2,p.y);
+    cx.lineTo(p.x,p.y+TH/2);cx.lineTo(p.x-TW/2,p.y);cx.closePath()});
+  cx.fillStyle=C.w2; cx.fill();
+  cx.restore();
+  /* Rim: stroke ONLY edges whose neighbour is not water. Stroking each diamond
+     subpath drew every internal tile edge too, which put a lattice across the
+     pond. In iso space each grid neighbour maps to one specific diamond edge:
+       gx-1 -> upper-left,  gy-1 -> upper-right,
+       gx+1 -> lower-right, gy+1 -> lower-left.  */
+  cx.strokeStyle='rgba(44,35,28,.30)'; cx.lineWidth=2;
+  cx.beginPath();
+  water.forEach(k=>{
+    const [a,b]=k.split(',').map(Number), p=iso(a,b);
+    const T=[p.x,p.y-TH/2], R=[p.x+TW/2,p.y], B=[p.x,p.y+TH/2], L=[p.x-TW/2,p.y];
+    const edge=(m,n)=>{cx.moveTo(m[0],m[1]);cx.lineTo(n[0],n[1])};
+    if(!water.has((a-1)+','+b)) edge(T,L);
+    if(!water.has(a+','+(b-1))) edge(T,R);
+    if(!water.has((a+1)+','+b)) edge(R,B);
+    if(!water.has(a+','+(b+1))) edge(L,B);
+  });
+  cx.stroke();
+}
+
+/* Ripples are the only animated part of the pond, so they are the only part
+   redrawn per frame. Everything else lives in the cached terrain layer. */
+function pondRipples(){
+  if(!water.size) return;
+  cx.save(); cx.beginPath();
+  let minx=1e9,maxx=-1e9,miny=1e9,maxy=-1e9;
+  water.forEach(k=>{const[a,b]=k.split(',').map(Number);const p=iso(a,b);
+    cx.moveTo(p.x,p.y-TH/2);cx.lineTo(p.x+TW/2,p.y);
+    cx.lineTo(p.x,p.y+TH/2);cx.lineTo(p.x-TW/2,p.y);cx.closePath();
+    minx=Math.min(minx,p.x-TW/2);maxx=Math.max(maxx,p.x+TW/2);
+    miny=Math.min(miny,p.y-TH/2);maxy=Math.max(maxy,p.y+TH/2)});
+  cx.clip();
+  cx.fillStyle=C.w1;
+  for(let y=miny;y<maxy;y+=26){
+    const off=Math.sin(y*0.05+t*0.9)*14;
+    cx.fillRect(minx+off,y,maxx-minx,13);
+  }
+  cx.fillStyle='rgba(255,255,255,.22)';
+  for(let y=miny+9;y<maxy;y+=26){
+    const off=Math.sin(y*0.08-t*0.7)*20;
+    cx.fillRect(minx+34+off,y,(maxx-minx)*0.30,2);
+    cx.fillRect(minx+34+off+(maxx-minx)*0.42,y+7,(maxx-minx)*0.18,2);
+  }
+  cx.restore();
+}
+
+function tree(o){
+  const p=iso(o.x,o.y), s=o.s;
+  cx.fillStyle='rgba(44,35,28,.16)';
+  diamond(p.x,p.y+2,22*s,11*s); cx.fill();
+  if(o.t<0.42){                                   // pine: layered cones
+    const h=32*s;
+    cx.fillStyle='#7a5a3c'; cx.fillRect(p.x-2*s,p.y-h*0.34,4*s,h*0.34);
+    [[0,1,C.t1],[-0.24,0.76,C.t2],[-0.48,0.5,C.t3]].forEach(([dy,w,col])=>{
+      cx.beginPath();
+      cx.moveTo(p.x, p.y-h-dy*h*0.5);
+      cx.lineTo(p.x+14*s*w, p.y-h*0.34+dy*h*0.5);
+      cx.lineTo(p.x-14*s*w, p.y-h*0.34+dy*h*0.5);
+      cx.closePath(); cx.fillStyle=col; cx.fill();
+    });
+  } else if(o.t<0.80){                            // broadleaf: stacked blobs
+    const h=26*s;
+    cx.fillStyle='#7a5a3c'; cx.fillRect(p.x-2.2*s,p.y-h*0.42,4.4*s,h*0.42);
+    cx.fillStyle=C.t2; cx.beginPath(); cx.arc(p.x,p.y-h,12*s,0,7); cx.fill();
+    cx.fillStyle=C.t1; cx.beginPath(); cx.arc(p.x-4*s,p.y-h-4*s,8*s,0,7); cx.fill();
+    cx.fillStyle=C.t3; cx.beginPath(); cx.arc(p.x+6*s,p.y-h+3*s,7*s,0,7); cx.fill();
+  } else {                                        // shrub / rock, ground clutter
+    if(o.t>0.93){
+      cx.fillStyle=C.stone; cx.beginPath(); cx.arc(p.x,p.y-5*s,7*s,0,7); cx.fill();
+      cx.fillStyle='#a2917a'; cx.beginPath(); cx.arc(p.x-2*s,p.y-7*s,4*s,0,7); cx.fill();
+    } else {
+      cx.fillStyle=C.t2; cx.beginPath(); cx.arc(p.x-4*s,p.y-5*s,6*s,0,7); cx.fill();
+      cx.fillStyle=C.t1; cx.beginPath(); cx.arc(p.x+3*s,p.y-6*s,7*s,0,7); cx.fill();
+    }
+  }
+}
+
+/* a stop: hut for challenges, castle for the boss */
+function building(s,st){
+  const p=iso(...s.g), boss=!!s.boss;
+  if(boss){ bossKeep(p,st); return; }
+  const w=34, h=27;
+  cx.fillStyle='rgba(44,35,28,.2)'; diamond(p.x,p.y+3,w+10,(w+10)/2); cx.fill();
+  const wall = st==='locked' ? C.stone : C.card;
+  const roof = st==='locked' ? '#8d8069' : (boss?C.acc:C.pri);
+  // body: front-left and front-right faces, shaded
+  cx.fillStyle=wall;
+  cx.beginPath();cx.moveTo(p.x-w/2,p.y);cx.lineTo(p.x,p.y+w/4);cx.lineTo(p.x,p.y+w/4-h);cx.lineTo(p.x-w/2,p.y-h);cx.closePath();cx.fill();
+  cx.fillStyle=st==='locked'?'#7d7159':'#ddd0b8';
+  cx.beginPath();cx.moveTo(p.x+w/2,p.y);cx.lineTo(p.x,p.y+w/4);cx.lineTo(p.x,p.y+w/4-h);cx.lineTo(p.x+w/2,p.y-h);cx.closePath();cx.fill();
+  // roof
+  cx.fillStyle=roof;
+  cx.beginPath();cx.moveTo(p.x,p.y-h-(boss?18:12));cx.lineTo(p.x+w/2+4,p.y-h+2);cx.lineTo(p.x,p.y+w/4-h+2);cx.lineTo(p.x-w/2-4,p.y-h+2);cx.closePath();cx.fill();
+  cx.strokeStyle=C.ink;cx.lineWidth=1.5;cx.stroke();
+  // door
+  cx.fillStyle=st==='locked'?'#4b4234':'#8a5f3c';
+  cx.fillRect(p.x-5,p.y+w/8-13,7,13);
+  // window, lit only if the hut is open — a free read on state from a distance
+  cx.fillStyle = st==='locked' ? '#6c6250' : C.acc;
+  cx.fillRect(p.x+7,p.y-h*0.55,6,6);
+  cx.strokeStyle=C.ink; cx.lineWidth=1.2; cx.strokeRect(p.x+7,p.y-h*0.55,6,6);
+}
+
+/* The boss is the end of the road, so it has to look like it from across the
+   map: stone keep, two flanking towers, battlements, banners. Same procedural
+   box trick, just more of it. */
+function bossKeep(p,st){
+  const w=54, h=52, locked = st==='locked';
+  const wall  = locked?'#9a8f78':C.stone;
+  const wallD = locked?'#7b7260':'#9e8f74';
+  const roof  = locked?'#7d7159':C.dest;
+  cx.fillStyle='rgba(44,35,28,.24)'; diamond(p.x,p.y+4,w+22,(w+22)/2); cx.fill();
+  // side towers first (they sit behind the keep face)
+  [-1,1].forEach(d=>{
+    const tx=p.x+d*30, ty=p.y-6, tw=17, th=h+12;
+    cx.fillStyle=wall;  cx.fillRect(tx-tw/2,ty-th,tw/2,th);
+    cx.fillStyle=wallD; cx.fillRect(tx,ty-th,tw/2,th);
+    cx.strokeStyle=C.ink;cx.lineWidth=1.5;cx.strokeRect(tx-tw/2,ty-th,tw,th);
+    for(let i=0;i<3;i++){ // battlements
+      cx.fillStyle=wall; cx.fillRect(tx-tw/2+i*6,ty-th-5,4,5);
+      cx.strokeRect(tx-tw/2+i*6,ty-th-5,4,5);
+    }
+    cx.fillStyle=locked?'#5b5344':C.acc; cx.fillRect(tx-2,ty-th*0.62,4,6);
+  });
+  // keep body
+  cx.fillStyle=wall;
+  cx.beginPath();cx.moveTo(p.x-w/2,p.y);cx.lineTo(p.x,p.y+w/4);
+  cx.lineTo(p.x,p.y+w/4-h);cx.lineTo(p.x-w/2,p.y-h);cx.closePath();cx.fill();
+  cx.fillStyle=wallD;
+  cx.beginPath();cx.moveTo(p.x+w/2,p.y);cx.lineTo(p.x,p.y+w/4);
+  cx.lineTo(p.x,p.y+w/4-h);cx.lineTo(p.x+w/2,p.y-h);cx.closePath();cx.fill();
+  cx.strokeStyle=C.ink;cx.lineWidth=1.6;
+  cx.beginPath();cx.moveTo(p.x,p.y+w/4);cx.lineTo(p.x,p.y+w/4-h);cx.stroke();
+  // stone courses, so the wall is not a flat slab
+  cx.strokeStyle='rgba(44,35,28,.16)';cx.lineWidth=1;
+  for(let i=1;i<5;i++){
+    const yy=p.y-h+(h/5)*i;
+    cx.beginPath();cx.moveTo(p.x-w/2,yy);cx.lineTo(p.x,yy+w/4);
+    cx.lineTo(p.x+w/2,yy);cx.stroke();
+  }
+  // roof
+  cx.fillStyle=roof;
+  cx.beginPath();cx.moveTo(p.x,p.y-h-24);cx.lineTo(p.x+w/2+5,p.y-h+2);
+  cx.lineTo(p.x,p.y+w/4-h+2);cx.lineTo(p.x-w/2-5,p.y-h+2);cx.closePath();cx.fill();
+  cx.strokeStyle=C.ink;cx.lineWidth=1.6;cx.stroke();
+  // arched gate
+  cx.fillStyle=locked?'#3f382d':'#7a4f30';
+  cx.beginPath();cx.moveTo(p.x-8,p.y+w/8);cx.lineTo(p.x-8,p.y+w/8-14);
+  cx.arc(p.x-3,p.y+w/8-14,5,Math.PI,0);cx.lineTo(p.x+2,p.y+w/8);cx.closePath();cx.fill();
+  cx.strokeStyle=C.ink;cx.lineWidth=1.4;cx.stroke();
+  if(locked){ // a visible bar, so "not yet" needs no words
+    cx.strokeStyle=C.ink;cx.lineWidth=2.6;
+    cx.beginPath();cx.moveTo(p.x-11,p.y+w/8-9);cx.lineTo(p.x+5,p.y+w/8-13);cx.stroke();
+  }
+  // banners on the keep
+  [-1,1].forEach(d=>{
+    cx.strokeStyle=C.ink;cx.lineWidth=1.6;cx.beginPath();
+    cx.moveTo(p.x+d*13,p.y-h-14);cx.lineTo(p.x+d*13,p.y-h-38);cx.stroke();
+    cx.fillStyle=locked?'#8d8069':C.dest;cx.beginPath();
+    cx.moveTo(p.x+d*13,p.y-h-38);cx.lineTo(p.x+d*13+d*13,p.y-h-33);
+    cx.lineTo(p.x+d*13,p.y-h-28);cx.closePath();cx.fill();
+    cx.strokeStyle=C.ink;cx.lineWidth=1.2;cx.stroke();
+  });
+}
+
+/* the numbered marker floating over a stop */
+function marker(s,st,i){
+  const p=iso(...s.g), boss=!!s.boss;
+  const lift = boss?76:52;
+  const bob = st==='active' ? Math.sin(t*2.4)*3 : 0;
+  const y=p.y-lift+bob, r=boss?17:13;
+  cx.save();
+  if(st==='active'){ // pulse ring draws the eye to the one thing to do next
+    const g=(Math.sin(t*2.4)+1)/2;
+    cx.beginPath();cx.arc(p.x,y,r+5+g*5,0,7);
+    cx.strokeStyle='rgba(199,91,57,'+(0.5-g*0.36)+')';cx.lineWidth=3;cx.stroke();
+  }
+  cx.beginPath();cx.arc(p.x,y,r,0,7);
+  cx.fillStyle = st==='done'?C.acc : st==='active'?C.pri : C.mut;
+  cx.fill(); cx.lineWidth=2.5; cx.strokeStyle=C.ink; cx.stroke();
+  cx.fillStyle = st==='locked'?C.mutfg:C.card;
+  cx.textAlign='center'; cx.textBaseline='middle';
+  if(st==='done'){
+    cx.lineWidth=3;cx.strokeStyle=C.ink;cx.beginPath();
+    cx.moveTo(p.x-5,y);cx.lineTo(p.x-1,y+4);cx.lineTo(p.x+6,y-5);cx.stroke();
+  } else if(st==='locked'){
+    cx.lineWidth=2.2;cx.strokeStyle=C.mutfg;
+    cx.strokeRect(p.x-4,y-1,8,7);
+    cx.beginPath();cx.arc(p.x,y-1,3.2,Math.PI,0);cx.stroke();
+  } else {
+    cx.font='bold '+(boss?15:13)+'px '+FD;
+    cx.fillText(boss?'★':String(s.n),p.x,y+1);
+  }
+  // stem down to the ground so the marker belongs to the building
+  cx.strokeStyle='rgba(44,35,28,.3)';cx.lineWidth=2;cx.setLineDash([3,3]);
+  cx.beginPath();cx.moveTo(p.x,y+r);cx.lineTo(p.x,p.y-6);cx.stroke();cx.setLineDash([]);
+  cx.restore();
+}
+
+/* a little person: two-tone body, hat, per-student hue. ~14px tall. */
+function person(x,y,o,me){
+  const s=me?1.5:1, hue=me?18:o.hue;
+  cx.fillStyle='rgba(44,35,28,.22)';
+  cx.beginPath();cx.ellipse(x,y+1,6*s,3*s,0,0,7);cx.fill();
+  cx.fillStyle=`hsl(${hue} 42% ${me?46:52}%)`;                 // shirt
+  cx.fillRect(x-3.5*s,y-9*s,7*s,7*s);
+  cx.fillStyle='#5c4632'; cx.fillRect(x-3.5*s,y-2.5*s,2.5*s,2.5*s); cx.fillRect(x+1*s,y-2.5*s,2.5*s,2.5*s);
+  cx.fillStyle='#f0c9a4'; cx.beginPath();cx.arc(x,y-12*s,3.6*s,0,7);cx.fill();  // head
+  cx.fillStyle=['#3b2f26','#6b4a2f','#2c231c','#8a6a3c'][o.hat||0];            // hair
+  cx.beginPath();cx.arc(x,y-13.2*s,3.6*s,Math.PI,0);cx.fill();
+  cx.lineWidth=me?2:1.2; cx.strokeStyle=C.ink;
+  cx.beginPath();cx.arc(x,y-12*s,3.6*s,0,7);cx.stroke();
+  if(me){ // ring + label so you always find yourself instantly
+    cx.beginPath();cx.arc(x,y-6,15,0,7);
+    cx.strokeStyle=C.pri;cx.lineWidth=2.5;cx.setLineDash([4,3]);cx.stroke();cx.setLineDash([]);
+    cx.font='bold 10px '+FS;cx.textAlign='center';
+    const w=cx.measureText('EM').width+8;
+    cx.fillStyle=C.pri;cx.fillRect(x-w/2,y-32,w,12);
+    cx.strokeStyle=C.ink;cx.lineWidth=1.5;cx.strokeRect(x-w/2,y-32,w,12);
+    cx.fillStyle=C.card;cx.fillText('EM',x,y-23);
+  }
+}
+
+/* fan classmates around their stop — many on one node is the common case */
+function crowd(){
+  const by={};
+  mates.forEach(m=>{(by[m.stop]=by[m.stop]||[]).push(m)});
+  Object.keys(by).forEach(k=>{
+    const s=STOPS[+k]; if(!s) return;
+    const p=iso(...s.g), list=by[k], shown=list.slice(0,8);
+    shown.forEach((m,i)=>{
+      const ring=Math.floor(i/5), idx=i%5;
+      const a=-Math.PI*0.86 + (idx/4)*Math.PI*0.72;
+      const R=30+ring*17;
+      person(p.x+Math.cos(a)*R, p.y+14+Math.sin(a)*R*0.5+ring*6, m,false);
+    });
+    if(list.length>shown.length){          // never silently hide classmates
+      const lbl='+'+(list.length-shown.length);
+      cx.font='bold 10px '+FS;cx.textAlign='center';
+      const w=cx.measureText(lbl).width+10;
+      cx.fillStyle=C.card;cx.fillRect(p.x+40,p.y+26,w,14);
+      cx.strokeStyle=C.ink;cx.lineWidth=1.5;cx.strokeRect(p.x+40,p.y+26,w,14);
+      cx.fillStyle=C.ink;cx.fillText(lbl,p.x+40+w/2,p.y+36);
+    }
+  });
+}
+
+function drawFlat(){
+  // the "Sơ đồ" view: same data, no scenery — for a kid who just wants the list
+  cx.fillStyle=C.bg;cx.fillRect(0,0,W,H);
+  const n=STOPS.length, pad=W>860?200:34, span=Math.min(W-pad*2, 1020);
+  const x0=(W-span)/2;
+  cx.lineWidth=W>860?11:8;cx.lineCap='round';cx.beginPath();
+  STOPS.forEach((s,i)=>{
+    const x=x0+span*(i/(n-1)), y=H/2+Math.sin(i*0.9)*(W>860?78:52);
+    i?cx.lineTo(x,y):cx.moveTo(x,y);
+  });
+  cx.strokeStyle='#c7b59a';cx.stroke();
+  STOPS.forEach((s,i)=>{
+    const amp=W>860?78:52;
+    const x=x0+span*(i/(n-1)), y=H/2+Math.sin(i*0.9)*amp, st=STATE[i], boss=!!s.boss;
+    const r=boss?26:19;
+    // alternate labels above/below so a long Vietnamese name never lands on
+    // the neighbouring node or on the "EM" marker
+    const below = i%2===0, ly = below ? y+r+16 : y-r-9;
+    if(st==='active'){const g=(Math.sin(t*2.4)+1)/2;cx.beginPath();cx.arc(x,y,r+6+g*5,0,7);
+      cx.strokeStyle='rgba(199,91,57,'+(0.5-g*0.35)+')';cx.lineWidth=3;cx.stroke();}
+    cx.beginPath();cx.arc(x,y,r,0,7);
+    cx.fillStyle=st==='done'?C.acc:st==='active'?C.pri:C.mut;cx.fill();
+    cx.lineWidth=2.5;cx.strokeStyle=C.ink;cx.stroke();
+    cx.fillStyle=st==='locked'?C.mutfg:C.card;cx.textAlign='center';cx.textBaseline='middle';
+    cx.font='bold '+(boss?17:14)+'px '+FD;
+    cx.fillText(boss?'★':String(s.n),x,y+1);
+    cx.fillStyle=C.mutfg;cx.font='600 11px '+FS;
+    cx.fillText(NAMES[i],x,ly);
+    const c=mates.filter(m=>m.stop===i).length;
+    if(c){cx.fillStyle=C.sec;cx.font='bold 11px '+FS;
+      cx.fillText(c+' bạn',x, below ? ly+14 : ly-14);}
+  });
+  // "you are here" sits clear of the node and its label
+  const amp=W>860?78:52;
+  const mx=x0+span*(ME.stop/(n-1)), my=H/2+Math.sin(ME.stop*0.9)*amp;
+  person(mx+34,my+8,{hue:18,hat:0},true);
+}
+
+/* ============================ frame loop ============================
+   Terrain is expensive and static: ~2,600 visible tiles, each a canvas path
+   fill plus a skirt, plus a few hundred trees. Redrawing all of it 60 times a
+   second measured 17fps on a 1440x900 desktop — the verification script caught
+   it, which is the entire reason that script exists.
+
+   Fix: render ground + pond base + trees + buildings ONCE into an offscreen
+   canvas and blit it. It is only rebuilt when the camera, zoom or viewport
+   actually changes. Per frame we now draw the blit plus the genuinely animated
+   layer — water ripples, the class, the pulsing markers.
+   =================================================================== */
+const terr = document.createElement('canvas');
+let terrKey = '';
+
+function buildTerrain(){
+  const key = [Math.round(cam.x), Math.round(cam.y), Z.toFixed(3), W, H, DPR].join('|');
+  if (key === terrKey) return;
+  terrKey = key;
+  terr.width = Math.max(1, Math.floor(W*DPR));
+  terr.height= Math.max(1, Math.floor(H*DPR));
+  const g = terr.getContext('2d');
+  g.setTransform(DPR,0,0,DPR,0,0);
+  g.imageSmoothingEnabled = false;
+  // draw into the offscreen context by temporarily pointing the module-level
+  // `cx` at it, so every existing draw function is reused unchanged
+  const real = cx; cxSet(g);
+  const wash = g.createLinearGradient(0,0,0,H);
+  wash.addColorStop(0,'#efe3cf'); wash.addColorStop(1,'#dcd0b6');
+  g.fillStyle=wash; g.fillRect(0,0,W,H);
+  g.save();
+  g.translate(Math.round(W/2), Math.round(H/2));
+  g.scale(Z,Z);
+  g.translate(-Math.round(cam.x), -Math.round(cam.y));
+  const r = visibleRange();
+  for(let gx=r.gx0;gx<=r.gx1;gx++) for(let gy=r.gy0;gy<=r.gy1;gy++) groundTile(gx,gy);
+  pondBase();
+  const props=[];
+  for(let gx=r.gx0;gx<=r.gx1;gx++) for(let gy=r.gy0;gy<=r.gy1;gy++){
+    const o=treeAt(gx,gy); if(o) props.push({d:gx+gy,f:()=>tree(o)});
+  }
+  STOPS.forEach((st,i)=>props.push({d:st.g[0]+st.g[1]-0.5,f:()=>building(st,STATE[i])}));
+  props.sort((a,b)=>a.d-b.d).forEach(pr=>pr.f());
+  g.restore();
+  cxSet(real);
+}
+
+/* Which grid cells the viewport covers: bounding box of the four screen
+   corners in grid space, plus margin for tall props leaning in off-screen. */
+function visibleRange(){
+  const inv=(x,y)=>({gx:(y/(TH/2)+x/(TW/2))/2, gy:(y/(TH/2)-x/(TW/2))/2});
+  const cs=[[-W/2,-H/2],[W/2,-H/2],[-W/2,H/2],[W/2,H/2]]
+    .map(([dx,dy])=>inv(cam.x+dx/Z, cam.y+dy/Z));
+  return {
+    gx0:Math.floor(Math.min(...cs.map(c=>c.gx)))-3,
+    gx1:Math.ceil (Math.max(...cs.map(c=>c.gx)))+3,
+    gy0:Math.floor(Math.min(...cs.map(c=>c.gy)))-3,
+    gy1:Math.ceil (Math.max(...cs.map(c=>c.gy)))+4,
+  };
+}
+
+function frame(ts){
+  t=(ts||0)/1000;
+  if(flat){ drawFlat(); requestAnimationFrame(frame); return; }
+  buildTerrain();
+  cx.setTransform(DPR,0,0,DPR,0,0);
+  cx.clearRect(0,0,W,H);
+  cx.drawImage(terr, 0, 0, W, H);
+  cx.save();
+  cx.translate(Math.round(W/2), Math.round(H/2));
+  cx.scale(Z,Z);
+  cx.translate(-Math.round(cam.x), -Math.round(cam.y));
+  pondRipples();
+  crowd();
+  const mp=iso(...STOPS[ME.stop].g); person(mp.x, mp.y+8, {hue:18,hat:0}, true);
+  STOPS.forEach((st,i)=>marker(st,STATE[i],i));
+  cx.restore();
+  // vignette: darkens the far corners a touch so the road reads as the subject
+  const vg=cx.createRadialGradient(W*0.46,H*0.5,Math.min(W,H)*0.22,
+                                   W*0.46,H*0.5,Math.max(W,H)*0.72);
+  vg.addColorStop(0,'rgba(44,35,28,0)'); vg.addColorStop(1,'rgba(44,35,28,.26)');
+  cx.fillStyle=vg; cx.fillRect(0,0,W,H);
+  requestAnimationFrame(frame);
+}
+
+/* ---- minimap: the whole path at a glance, with the viewport box ---- */
+function drawMini(){
+  const c=document.getElementById('minic'), g=c.getContext('2d');
+  g.imageSmoothingEnabled=false;
+  g.fillStyle='#b9c69a'; g.fillRect(0,0,c.width,c.height);
+  // fit the path's own bounding box, so the whole journey always fills the box
+  const ps=STOPS.map(s=>iso(...s.g));
+  const x0=Math.min(...ps.map(p=>p.x))-90, x1=Math.max(...ps.map(p=>p.x))+90;
+  const y0=Math.min(...ps.map(p=>p.y))-90, y1=Math.max(...ps.map(p=>p.y))+90;
+  const k=Math.min(c.width/(x1-x0), c.height/(y1-y0));
+  const P=(gx,gy)=>{const p=iso(gx,gy);
+    return {x:(p.x-x0)*k+(c.width-(x1-x0)*k)/2, y:(p.y-y0)*k+(c.height-(y1-y0)*k)/2}};
+  water.forEach(kk=>{const[a,b]=kk.split(',').map(Number);const p=P(a,b);
+    g.fillStyle=C.w2;g.fillRect(p.x-3,p.y-2,6,4)});
+  path.forEach(kk=>{const[a,b]=kk.split(',').map(Number);const p=P(a,b);
+    g.fillStyle=C.p1;g.fillRect(p.x-4,p.y-3,8,6)});
+  // classmate density per stop, drawn as a small stack under the node
+  const by={}; mates.forEach(m=>{by[m.stop]=(by[m.stop]||0)+1});
+  STOPS.forEach((s,i)=>{
+    const p=P(...s.g), st=STATE[i];
+    g.fillStyle=st==='done'?C.acc:st==='active'?C.pri:'#9d9583';
+    g.beginPath();g.arc(p.x,p.y,s.boss?8:6,0,7);g.fill();
+    g.strokeStyle=C.ink;g.lineWidth=2;g.stroke();
+    const n=by[i]||0;
+    for(let j=0;j<Math.min(n,6);j++){
+      g.fillStyle=C.sec;g.fillRect(p.x-9+j*3.4,p.y+10,2.6,5);
+    }
+  });
+  const me=P(...STOPS[ME.stop].g);
+  g.strokeStyle=C.pri;g.lineWidth=3;g.strokeRect(me.x-19,me.y-15,38,30);
+}
+
+/* ---------------- interaction ---------------- */
+let drag=null;
+cv.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,cx:cam.x,cy:cam.y,moved:0};cv.classList.add('dragging')});
+cv.addEventListener('pointermove',e=>{if(!drag)return;
+  const dx=e.clientX-drag.x, dy=e.clientY-drag.y; drag.moved=Math.hypot(dx,dy);
+  cam.x=drag.cx-dx/Z; cam.y=drag.cy-dy/Z; drawMini()});
+addEventListener('pointerup',e=>{
+  if(drag&&drag.moved<6&&!flat) hit(e.clientX,e.clientY);
+  drag=null;cv.classList.remove('dragging')});
+
+/* Screen -> world, undoing the same translate/scale/translate as frame(). */
+function toWorld(px,py){return{x:(px-W/2)/Z+cam.x, y:(py-H/2)/Z+cam.y}}
+function hit(px,py){
+  const w=toWorld(px,py);
+  for(let i=STOPS.length-1;i>=0;i--){
+    const p=iso(...STOPS[i].g), lift=STOPS[i].boss?76:52;
+    // marker, then the building itself — generous radii for small fingers
+    if(Math.hypot(w.x-p.x, w.y-(p.y-lift))<24){ open(i); return; }
+    if(Math.hypot(w.x-p.x, w.y-(p.y-14))<32){ open(i); return; }
+  }
+}
+
+const dlg=document.getElementById('dlg');
+function open(i){
+  const st=STATE[i], s=STOPS[i], boss=!!s.boss;
+  const here=mates.filter(m=>m.stop===i);
+  document.getElementById('dTtl').textContent = boss?'Trùm cuối: '+NAMES[i]:'Thử thách '+s.n+': '+NAMES[i];
+  document.getElementById('dSub').textContent = st==='done'?'Đã xong':st==='active'?'Đang mở':'Chưa mở';
+  document.getElementById('dBody').textContent =
+    st==='locked' ? (boss?'Xong cả 8 thử thách thì cửa trùm mới mở.':'Xong thử thách trước là mở được chỗ này.')
+    : st==='done' ? 'Em đã xong chỗ này rồi. Vào lại để ôn cũng được.'
+    : boss?'Cửa trùm đã mở. Đánh xong là qua bản đồ mới!':'Có 8 câu ở đây. Làm xong em bước tiếp một chặng.';
+  document.getElementById('dWho').textContent = here.length
+    ? here.length+' bạn đang ở đây: '+here.slice(0,5).map(m=>m.nm).join(', ')+(here.length>5?'…':'')
+    : 'Chưa có bạn nào ở đây.';
+  const go=document.getElementById('dGo');
+  go.textContent = st==='locked'?'Chưa mở':(st==='done'?'Ôn lại':'Vào thử thách');
+  go.style.background = st==='locked'?C.mut:C.pri;
+  go.style.color = st==='locked'?C.mutfg:C.card;
+  npcFace(st);
+  dlg.classList.add('on');
+}
+document.getElementById('dNo').onclick=()=>dlg.classList.remove('on');
+document.getElementById('dGo').onclick=()=>dlg.classList.remove('on');
+
+/* NPC portrait reacts to state — cheer / neutral / think */
+function npcFace(st){
+  const c=document.getElementById('npc'), g=c.getContext('2d');
+  g.imageSmoothingEnabled=false; g.clearRect(0,0,28,28);
+  g.fillStyle=C.peach;g.fillRect(0,0,28,28);
+  g.fillStyle=st==='done'?C.acc:st==='active'?C.sec:C.mut;g.fillRect(7,15,14,13);
+  g.fillStyle='#f0c9a4';g.beginPath();g.arc(14,12,7,0,7);g.fill();
+  g.fillStyle='#3b2f26';g.beginPath();g.arc(14,10,7,Math.PI,0);g.fill();
+  g.fillStyle=C.ink;g.fillRect(11,12,2,2);g.fillRect(16,12,2,2);
+  g.strokeStyle=C.ink;g.lineWidth=1.4;g.beginPath();
+  if(st==='locked'){g.moveTo(11,17);g.lineTo(17,17)}                    // neutral
+  else{g.arc(14,15,3.4,0.15,Math.PI-0.15)}                              // smile
+  g.stroke();
+}
+
+/* my own avatar in the HUD */
+(function(){const g=document.getElementById('face').getContext('2d');
+  g.imageSmoothingEnabled=false;g.fillStyle=C.peach;g.fillRect(0,0,34,34);
+  g.fillStyle=C.pri;g.fillRect(9,20,16,14);
+  g.fillStyle='#f0c9a4';g.beginPath();g.arc(17,15,8,0,7);g.fill();
+  g.fillStyle='#3b2f26';g.beginPath();g.arc(17,13,8,Math.PI,0);g.fill();
+  g.fillStyle=C.ink;g.fillRect(13,15,2,2);g.fillRect(19,15,2,2);
+  g.strokeStyle=C.ink;g.lineWidth=1.5;g.beginPath();g.arc(17,18,4,0.15,Math.PI-0.15);g.stroke()})();
+
+const bIso=document.getElementById('bIso'), bFlat=document.getElementById('bFlat');
+function setView(f){flat=f;bIso.setAttribute('aria-pressed',String(!f));bFlat.setAttribute('aria-pressed',String(f));dlg.classList.remove('on')}
+bIso.onclick=()=>setView(false); bFlat.onclick=()=>setView(true);
+
+resize(); npcFace('active'); requestAnimationFrame(frame);
+</script>
+</body>
+</html>

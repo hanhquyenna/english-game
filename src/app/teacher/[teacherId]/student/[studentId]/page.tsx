@@ -315,8 +315,8 @@ export default async function TeacherStudentPage({
                       key={v.id}
                       className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium border ${
                         isMastered
-                          ? "bg-emerald-50 text-emerald-800 border-emerald-300"
-                          : "bg-slate-50 text-slate-700 border-slate-200"
+                          ? "bg-success/10 text-success border-success/30"
+                          : "bg-muted text-muted-foreground border-border"
                       }`}
                       title={`${v.term}: ${v.meaning} (Điểm: ${score}/100)`}
                     >
@@ -341,8 +341,8 @@ export default async function TeacherStudentPage({
                       key={g.id}
                       className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium border ${
                         isMastered
-                          ? "bg-indigo-50 text-indigo-800 border-indigo-300"
-                          : "bg-slate-50 text-slate-700 border-slate-200"
+                          ? "bg-persona-soft text-persona border-persona-border"
+                          : "bg-muted text-muted-foreground border-border"
                       }`}
                       title={`${g.name} (Điểm: ${score}/100)`}
                     >

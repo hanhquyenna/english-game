@@ -29,7 +29,7 @@ type Answer = number | string | Record<string, string>;
  * Exercise + Lesson Complete, ported from the prototype's ExerciseScreen and
  * CompleteScreen.
  *
- * Exercise: 2px-bordered header with ✕ and a progress bar, a mono eyebrow, a
+ * Exercise: 2px-bordered header with a close (X) icon and a progress bar, a mono eyebrow, a
  * Georgia 26/32 title, a bordered word card, 57px answer rows, and a sticky
  * footer that swaps the Check button for a feedback panel.
  *

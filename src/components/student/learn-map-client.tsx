@@ -13,7 +13,10 @@ import {
   Globe,
   Lock,
   LogOut,
+  Medal,
+  PenLine,
   Sparkles,
+  Timer,
   Trophy,
   X,
   Zap,
@@ -78,7 +81,7 @@ export function LearnMapClient({
       name: "World 1: Green Forest Realm",
       subtitle: "Beginner CEFR A1 Fundamentals",
       bgImage: "/craftpix/nature-backgrounds/nature_1/origbig.png",
-      themeBadge: "bg-emerald-600 border-emerald-400 text-white",
+      themeBadge: "bg-st-secondary border-st-fg text-st-primary-fg",
       unlocked: true,
       lessons: [
         { id: "w1-l1", topicId: islands[0]?.topicId ?? "unit-1", number: 1, globalLessonNumber: 1, name: "Lesson 1: Greetings & Intro", subtitle: "Basic Greetings & Introductions", percentComplete: 100, isUnlocked: true, isExam: false, x: 15, y: 38 },
@@ -95,7 +98,7 @@ export function LearnMapClient({
       name: "World 2: Blossom Valley Realm",
       subtitle: "CEFR A1 Expansion & Vocabulary",
       bgImage: "/craftpix/nature-backgrounds/nature_2/origbig.png",
-      themeBadge: "bg-pink-600 border-pink-400 text-white",
+      themeBadge: "bg-st-peach border-st-fg text-st-fg",
       unlocked: true,
       lessons: [
         { id: "w2-l1", topicId: "w2-unit-1", number: 1, globalLessonNumber: 8, name: "Lesson 7: Shopping & Clothes", subtitle: "Prices, Clothing & Stores", percentComplete: 0, isUnlocked: true, isExam: false, x: 15, y: 38 },
@@ -112,7 +115,7 @@ export function LearnMapClient({
       name: "World 3: Misty Mountain Realm",
       subtitle: "CEFR A2 Elementary Grammar",
       bgImage: "/craftpix/nature-backgrounds/nature_3/origbig.png",
-      themeBadge: "bg-cyan-700 border-cyan-400 text-white",
+      themeBadge: "bg-st-muted border-st-fg text-st-fg",
       unlocked: true,
       lessons: [
         { id: "w3-l1", topicId: "w3-unit-1", number: 1, globalLessonNumber: 15, name: "Lesson 13: Environment & Nature", subtitle: "Animals & Saving the Planet", percentComplete: 0, isUnlocked: true, isExam: false, x: 15, y: 38 },
@@ -129,7 +132,7 @@ export function LearnMapClient({
       name: "World 4: Twilight Woodland Realm",
       subtitle: "CEFR A2+ Advanced Structures",
       bgImage: "/craftpix/nature-backgrounds/nature_4/origbig.png",
-      themeBadge: "bg-purple-700 border-purple-400 text-white",
+      themeBadge: "bg-st-primary border-st-fg text-st-primary-fg",
       unlocked: true,
       lessons: [
         { id: "w4-l1", topicId: "w4-unit-1", number: 1, globalLessonNumber: 22, name: "Lesson 19: Storytelling & Myths", subtitle: "Narrative Tenses & Fiction", percentComplete: 0, isUnlocked: true, isExam: false, x: 15, y: 38 },
@@ -146,7 +149,7 @@ export function LearnMapClient({
       name: "World 5: Mystic Grove Realm",
       subtitle: "CEFR B1 Intermediate Fluency",
       bgImage: "/craftpix/nature-backgrounds/nature_5/origbig.png",
-      themeBadge: "bg-indigo-700 border-indigo-400 text-white",
+      themeBadge: "bg-st-secondary border-st-accent text-st-primary-fg",
       unlocked: true,
       lessons: [
         { id: "w5-l1", topicId: "w5-unit-1", number: 1, globalLessonNumber: 29, name: "Lesson 25: Hypotheses & Conditions", subtitle: "If Clauses & Conditionals", percentComplete: 0, isUnlocked: true, isExam: false, x: 15, y: 38 },
@@ -163,7 +166,7 @@ export function LearnMapClient({
       name: "World 6: Golden Savanna Realm",
       subtitle: "CEFR B1+ Professional Mastery",
       bgImage: "/craftpix/nature-backgrounds/nature_6/origbig.png",
-      themeBadge: "bg-amber-600 border-amber-400 text-white",
+      themeBadge: "bg-st-accent border-st-fg text-st-fg",
       unlocked: true,
       lessons: [
         { id: "w6-l1", topicId: "w6-unit-1", number: 1, globalLessonNumber: 36, name: "Lesson 31: Advanced Idioms", subtitle: "Native Metaphors & Sayings", percentComplete: 0, isUnlocked: true, isExam: false, x: 15, y: 38 },
@@ -180,7 +183,7 @@ export function LearnMapClient({
       name: "World 7: Autumn Pine Realm",
       subtitle: "CEFR B2 Upper-Intermediate Fluency",
       bgImage: "/craftpix/nature-backgrounds/nature_7/origbig.png",
-      themeBadge: "bg-orange-700 border-orange-400 text-white",
+      themeBadge: "bg-st-destructive border-st-fg text-st-primary-fg",
       unlocked: true,
       lessons: [
         { id: "w7-l1", topicId: "w7-unit-1", number: 1, globalLessonNumber: 43, name: "Lesson 37: Complex Syntax & Style", subtitle: "Inversion & Emphasis", percentComplete: 0, isUnlocked: true, isExam: false, x: 15, y: 38 },
@@ -197,7 +200,7 @@ export function LearnMapClient({
       name: "World 8: Celestial Night Realm",
       subtitle: "CEFR C1 Native Master Level",
       bgImage: "/craftpix/nature-backgrounds/nature_8/origbig.png",
-      themeBadge: "bg-indigo-900 border-indigo-400 text-amber-300",
+      themeBadge: "bg-st-primary border-st-accent text-st-primary-fg",
       unlocked: true,
       lessons: [
         { id: "w8-l1", topicId: "w8-unit-1", number: 1, globalLessonNumber: 50, name: "Lesson 43: Native Subtleties & Irony", subtitle: "Humor, Sarcasm & Understatement", percentComplete: 0, isUnlocked: true, isExam: false, x: 15, y: 38 },
@@ -241,13 +244,13 @@ export function LearnMapClient({
             className="flex flex-col items-start text-left transition-transform active:scale-95"
           >
             <div className="flex items-center gap-3">
-              <span className="st-display text-xs font-black text-amber-300 uppercase tracking-wide">
+              <span className="st-display text-xs font-black text-st-accent uppercase tracking-wide">
                 Level {levelNumber}
               </span>
               <Mono className="text-[9px] font-black text-white">420 / 600 EXP</Mono>
             </div>
-            <div className="w-32 h-2 rounded-full bg-black/60 border border-amber-400/60 overflow-hidden p-0.5 mt-0.5">
-              <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-200 shadow-sm w-[70%]" />
+            <div className="w-32 h-2 rounded-full bg-black/60 border border-st-accent/60 overflow-hidden p-0.5 mt-0.5">
+              <div className="h-full rounded-full bg-gradient-to-r from-st-accent to-st-accent/60 shadow-sm w-[70%]" />
             </div>
           </button>
         </div>
@@ -268,7 +271,7 @@ export function LearnMapClient({
               onClick={() => setCurrentWorldId(world.id)}
               className={`px-3 py-1 rounded-full text-xs font-black transition-transform active:scale-95 whitespace-nowrap flex items-center gap-1 border ${
                 currentWorldId === world.id
-                  ? "bg-amber-400 text-slate-950 border-amber-300 shadow-md scale-105"
+                  ? "bg-st-accent text-st-fg border-st-fg shadow-md scale-105"
                   : "bg-black/40 text-white/80 border-white/10 hover:bg-white/10"
               }`}
             >
@@ -306,8 +309,8 @@ export function LearnMapClient({
 
       {/* CURRENT WORLD TITLE BADGE OVERLAY */}
       <div className="absolute top-20 left-6 z-30 pointer-events-none">
-        <div className="bg-black/85 backdrop-blur-md border-2 border-amber-400/60 px-4 py-2 rounded-2xl shadow-2xl space-y-0.5">
-          <span className="st-display text-base font-black text-amber-300 block">
+        <div className="bg-black/85 backdrop-blur-md border-2 border-st-accent/60 px-4 py-2 rounded-2xl shadow-2xl space-y-0.5">
+          <span className="st-display text-base font-black text-st-accent block">
             {activeWorld.name}
           </span>
           <Mono className="text-[10px] text-white/80 font-bold block">
@@ -400,7 +403,7 @@ export function LearnMapClient({
                 {/* BADGE: FINAL BOSS EXAM vs REGULAR LESSON */}
                 <div className="mb-2 flex items-center gap-1">
                   {node.isExam ? (
-                    <Mono className="rounded-md border-2 border-st-fg bg-gradient-to-r from-amber-500 to-amber-600 px-3 py-1 text-[11px] font-black text-st-fg shadow-xl uppercase animate-pulse flex items-center gap-1">
+                    <Mono className="rounded-md border-2 border-st-fg bg-gradient-to-r from-st-accent to-st-accent/70 px-3 py-1 text-[11px] font-black text-st-fg shadow-xl uppercase animate-pulse flex items-center gap-1">
                       <Trophy size={13} className="text-st-fg fill-st-fg" />
                       <span>W{activeWorld.id} FINAL BOSS EXAM</span>
                     </Mono>
@@ -414,18 +417,18 @@ export function LearnMapClient({
                     </Mono>
                   )}
                   {idx < activeWorld.lessons.length - 1 && node.isUnlocked && (
-                    <ArrowRight size={14} className="text-amber-300 animate-pulse" />
+                    <ArrowRight size={14} className="text-st-accent animate-pulse" />
                   )}
                 </div>
 
                 {/* VISUAL NODE ASSET: BOSS EXAM vs REGULAR LESSON */}
                 {node.isExam ? (
                   /* FINAL BOSS EXAM STATION UI */
-                  <div className="relative flex size-20 items-center justify-center rounded-3xl border-4 border-amber-400 bg-gradient-to-b from-amber-400 to-amber-600 shadow-[0_0_30px_rgba(245,158,11,0.95)] animate-bounce">
-                    <Crown className="size-11 text-slate-950 fill-amber-200" />
-                    <Sparkles className="absolute -top-2 -left-2 size-6 text-amber-300 fill-amber-300" />
+                  <div className="relative flex size-20 items-center justify-center rounded-3xl border-4 border-st-fg bg-gradient-to-b from-st-accent to-st-accent/70 shadow-[0_0_30px_rgba(245,158,11,0.95)] animate-bounce">
+                    <Crown className="size-11 text-st-fg fill-st-accent" />
+                    <Sparkles className="absolute -top-2 -left-2 size-6 text-st-accent fill-st-accent" />
                     {!node.isUnlocked && (
-                      <div className="absolute -top-2 -right-2 flex size-7 items-center justify-center rounded-full border-2 border-st-fg bg-rose-500 text-white shadow-md">
+                      <div className="absolute -top-2 -right-2 flex size-7 items-center justify-center rounded-full border-2 border-st-fg bg-st-destructive text-st-primary-fg shadow-md">
                         <Lock size={14} />
                       </div>
                     )}
@@ -434,7 +437,7 @@ export function LearnMapClient({
                   /* REGULAR LESSON NODE UI */
                   <div
                     className={`relative flex size-16 items-center justify-center rounded-2xl border-4 border-st-fg shadow-2xl transition-transform hover:rotate-3 ${
-                      node.isUnlocked ? "bg-st-card" : "bg-slate-800/90"
+                      node.isUnlocked ? "bg-st-card" : "bg-st-muted/90"
                     }`}
                   >
                     {node.number === 2 && activeWorld.id === 1 ? (
@@ -456,7 +459,7 @@ export function LearnMapClient({
                     {isDone ? (
                       <CheckCircle className="absolute -top-2 -right-2 size-7 text-st-secondary fill-st-secondary bg-white rounded-full border border-st-fg" />
                     ) : !node.isUnlocked ? (
-                      <div className="absolute -top-2 -right-2 flex size-7 items-center justify-center rounded-full border-2 border-st-fg bg-rose-500 text-white shadow-md">
+                      <div className="absolute -top-2 -right-2 flex size-7 items-center justify-center rounded-full border-2 border-st-fg bg-st-destructive text-st-primary-fg shadow-md">
                         <Lock size={14} />
                       </div>
                     ) : null}
@@ -467,7 +470,7 @@ export function LearnMapClient({
                 <div
                   className={`mt-2 text-center px-3 py-1.5 rounded-xl border shadow-xl max-w-[210px] ${
                     node.isExam
-                      ? "bg-gradient-to-r from-slate-900 to-amber-950 border-amber-400 text-amber-300"
+                      ? "bg-gradient-to-r from-st-accent to-st-primary border-st-fg text-st-primary-fg"
                       : "bg-black/85 border-white/20 text-white"
                   }`}
                 >
@@ -477,17 +480,23 @@ export function LearnMapClient({
                   <Mono
                     className={`text-[9px] font-extrabold block ${
                       node.isExam
-                        ? "text-amber-400"
+                        ? "text-st-accent"
                         : node.isUnlocked
                           ? "text-st-accent"
-                          : "text-rose-400"
+                          : "text-st-destructive"
                     }`}
                   >
-                    {node.isExam
-                      ? "World 1 Final Boss Exam 🏆"
-                      : node.isUnlocked
-                        ? `${node.percentComplete}% Completed`
-                        : "LOCKED 🔒"}
+                    {node.isExam ? (
+                      <span className="inline-flex items-center gap-1">
+                        World 1 Final Boss Exam <Trophy className="h-2.5 w-2.5" />
+                      </span>
+                    ) : node.isUnlocked ? (
+                      `${node.percentComplete}% Completed`
+                    ) : (
+                      <span className="inline-flex items-center gap-1">
+                        LOCKED <Lock className="h-2.5 w-2.5" />
+                      </span>
+                    )}
                   </Mono>
                 </div>
               </div>
@@ -555,7 +564,7 @@ export function LearnMapClient({
           <div
             className={`relative border-4 border-st-fg p-6 rounded-3xl w-full max-w-sm shadow-2xl space-y-4 text-center ${
               selectedNodeModal.isExam
-                ? "bg-gradient-to-b from-slate-900 via-amber-950 to-slate-950 text-amber-100 border-amber-400"
+                ? "bg-gradient-to-b from-st-accent/30 via-st-peach to-st-card text-st-fg border-st-accent"
                 : "bg-st-card text-st-fg"
             }`}
           >
@@ -568,11 +577,11 @@ export function LearnMapClient({
 
             <div
               className={`mx-auto flex h-24 w-24 items-center justify-center rounded-2xl border-2 border-st-fg p-2 shadow-inner relative overflow-hidden ${
-                selectedNodeModal.isExam ? "bg-amber-400/20 border-amber-400" : "bg-st-peach"
+                selectedNodeModal.isExam ? "bg-st-accent/20 border-st-accent" : "bg-st-peach"
               }`}
             >
               {selectedNodeModal.isExam ? (
-                <Trophy className="size-16 text-amber-400 animate-pulse" />
+                <Trophy className="size-16 text-st-accent animate-pulse" />
               ) : (
                 <StudentAvatar seed={seed} overrides={overrides} size={56} shape="square" />
               )}
@@ -581,7 +590,7 @@ export function LearnMapClient({
             <div>
               <h3
                 className={`st-display text-xl font-black ${
-                  selectedNodeModal.isExam ? "text-amber-300" : "text-st-fg"
+                  selectedNodeModal.isExam ? "text-st-accent" : "text-st-fg"
                 }`}
               >
                 {selectedNodeModal.name}
@@ -592,11 +601,11 @@ export function LearnMapClient({
             </div>
 
             {selectedNodeModal.isExam && (
-              <div className="grid grid-cols-2 gap-2 p-3 bg-amber-950/60 rounded-xl border border-amber-400/40 text-[11px] font-extrabold text-amber-200">
-                <div>⏱️ 20 Minutes</div>
-                <div>📝 10 Questions</div>
-                <div>🏆 +100 Stars XP</div>
-                <div>🏅 CEFR Certificate</div>
+              <div className="grid grid-cols-2 gap-2 p-3 bg-st-accent/60 rounded-xl border border-st-accent/40 text-[11px] font-extrabold text-st-fg">
+                <div className="flex items-center gap-1"><Timer className="h-3.5 w-3.5" /> 20 Minutes</div>
+                <div className="flex items-center gap-1"><PenLine className="h-3.5 w-3.5" /> 10 Questions</div>
+                <div className="flex items-center gap-1"><Trophy className="h-3.5 w-3.5" /> +100 Stars XP</div>
+                <div className="flex items-center gap-1"><Medal className="h-3.5 w-3.5" /> CEFR Certificate</div>
               </div>
             )}
 
@@ -613,7 +622,7 @@ export function LearnMapClient({
                     type="button"
                     className={`w-full py-3 px-4 font-black text-xs uppercase tracking-wider rounded-xl border-2 border-st-fg shadow-md transition-transform active:scale-95 flex items-center justify-center gap-2 ${
                       selectedNodeModal.isExam
-                        ? "bg-amber-400 text-slate-950 border-amber-300"
+                        ? "bg-st-accent text-st-fg border-st-fg"
                         : "bg-st-primary text-st-primary-fg"
                     }`}
                   >
@@ -629,11 +638,11 @@ export function LearnMapClient({
                   </button>
                 </Link>
               ) : (
-                <div className="p-3 bg-rose-950/80 border-2 border-rose-500 rounded-xl">
-                  <Mono className="text-xs font-black text-rose-300 block">
-                    🔒 Station Locked
+                <div className="p-3 bg-st-destructive/80 border-2 border-st-destructive rounded-xl">
+                  <Mono className="text-xs font-black text-st-primary-fg flex items-center justify-center gap-1">
+                    <Lock className="h-3 w-3" /> Station Locked
                   </Mono>
-                  <p className="text-[11px] text-rose-200 font-medium mt-0.5">
+                  <p className="text-[11px] text-st-primary-fg font-medium mt-0.5">
                     Complete previous lessons to unlock this {selectedNodeModal.isExam ? "final boss exam" : "unit"}!
                   </p>
                 </div>

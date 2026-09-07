@@ -110,7 +110,7 @@ export function ClozeReadingExercise({
                   }}
                 >
                   <span>Chỗ trống ({idx + 1}): <strong>{b.correctAnswer}</strong></span>
-                  {isCorrect ? <CheckCircle className="w-4 h-4 text-emerald-700" /> : <XCircle className="w-4 h-4 text-rose-700" />}
+                  {isCorrect ? <CheckCircle className="w-4 h-4 text-st-secondary" /> : <XCircle className="w-4 h-4 text-st-destructive" />}
                 </div>
               );
             })}

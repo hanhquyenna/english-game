@@ -229,43 +229,43 @@ export function VaultClient({
         {/* Modal for Card Detail (A1) */}
         {selectedCard && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-slate-900 border-2 border-slate-700 text-white p-5 rounded-2xl w-full max-w-sm shadow-2xl relative">
+            <div className="bg-st-card border-2 border-st-fg text-st-fg p-5 rounded-2xl w-full max-w-sm shadow-2xl relative">
               <button
                 type="button"
                 onClick={() => setSelectedCard(null)}
-                className="absolute top-3 right-3 text-slate-400 hover:text-white p-1 rounded-full"
+                className="absolute top-3 right-3 text-st-muted-fg hover:text-st-fg p-1 rounded-full"
               >
                 <X className="w-5 h-5" />
               </button>
 
               {modalError ? (
                 <div className="py-6 text-center space-y-4">
-                  <p className="text-rose-400 font-medium">Không thể tải chi tiết thẻ bài.</p>
+                  <p className="text-st-destructive font-medium">Không thể tải chi tiết thẻ bài.</p>
                   <button
                     type="button"
                     onClick={() => setModalError(false)}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 border border-slate-600 rounded-lg text-sm font-bold text-white hover:bg-slate-700"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-st-muted border border-st-input rounded-lg text-sm font-bold text-st-fg hover:bg-st-input"
                   >
                     <RotateCcw className="w-4 h-4" /> Thử lại
                   </button>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                    <span className="text-xs uppercase font-extrabold tracking-wider text-sky-400">
+                  <div className="flex items-center justify-between border-b border-st-input pb-3">
+                    <span className="text-xs uppercase font-extrabold tracking-wider text-st-primary">
                       {selectedCard.type === "vocab" ? "Từ vựng" : "Ngữ pháp"}
                     </span>
                     {selectedCard.audio_url ? (
                       <button
                         type="button"
                         onClick={() => playAudio(selectedCard.audio_url)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold rounded-lg text-xs transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-st-primary hover:bg-st-primary/80 text-st-primary-fg font-bold rounded-lg text-xs transition-colors"
                       >
                         <Volume2 className="w-4 h-4" /> Phát âm
                       </button>
                     ) : (
                       <span
-                        className="flex items-center gap-1 px-3 py-1.5 bg-slate-800 text-slate-500 rounded-lg text-xs font-semibold cursor-not-allowed"
+                        className="flex items-center gap-1 px-3 py-1.5 bg-st-muted text-st-muted-fg rounded-lg text-xs font-semibold cursor-not-allowed"
                         title="Chưa có audio"
                       >
                         <VolumeX className="w-4 h-4" /> Chưa có audio
@@ -274,14 +274,14 @@ export function VaultClient({
                   </div>
 
                   <div>
-                    <h3 className="text-2xl font-black text-amber-300">{selectedCard.title}</h3>
-                    <p className="text-slate-200 mt-2 text-base leading-relaxed font-medium">
+                    <h3 className="text-2xl font-black text-st-accent">{selectedCard.title}</h3>
+                    <p className="text-st-fg mt-2 text-base leading-relaxed font-medium">
                       {selectedCard.meaning}
                     </p>
                     {selectedCard.example && (
-                      <div className="mt-3 p-3 bg-slate-800/80 rounded-xl border border-slate-700/60">
-                        <span className="block text-[11px] text-slate-400 uppercase font-bold">Ví dụ:</span>
-                        <p className="text-xs italic text-sky-200 mt-0.5">&ldquo;{selectedCard.example}&rdquo;</p>
+                      <div className="mt-3 p-3 bg-st-muted/80 rounded-xl border border-st-input/60">
+                        <span className="block text-[11px] text-st-muted-fg uppercase font-bold">Ví dụ:</span>
+                        <p className="text-xs italic text-st-muted-fg mt-0.5">&ldquo;{selectedCard.example}&rdquo;</p>
                       </div>
                     )}
                   </div>
@@ -473,7 +473,7 @@ export function VaultClient({
                         "vocab",
                       )
                     }
-                    className="p-3 cursor-pointer hover:border-sky-400 transition-colors"
+                    className="p-3 cursor-pointer hover:border-st-primary transition-colors"
                     style={{ backgroundColor: "var(--st-card)" }}
                   >
                     <div className="flex items-center justify-between">
@@ -525,7 +525,7 @@ export function VaultClient({
                         "grammar",
                       )
                     }
-                    className="p-3 cursor-pointer hover:border-sky-400 transition-colors"
+                    className="p-3 cursor-pointer hover:border-st-primary transition-colors"
                     style={{ backgroundColor: "var(--st-card)" }}
                   >
                     <div className="flex items-center justify-between">
@@ -609,43 +609,43 @@ export function VaultClient({
       {/* Modal for Card Detail (A1) */}
       {selectedCard && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-slate-900 border-2 border-slate-700 text-white p-5 rounded-2xl w-full max-w-sm shadow-2xl relative">
+          <div className="bg-st-card border-2 border-st-fg text-st-fg p-5 rounded-2xl w-full max-w-sm shadow-2xl relative">
             <button
               type="button"
               onClick={() => setSelectedCard(null)}
-              className="absolute top-3 right-3 text-slate-400 hover:text-white p-1 rounded-full"
+              className="absolute top-3 right-3 text-st-muted-fg hover:text-st-fg p-1 rounded-full"
             >
               <X className="w-5 h-5" />
             </button>
 
             {modalError ? (
               <div className="py-6 text-center space-y-4">
-                <p className="text-rose-400 font-medium">Không thể tải chi tiết thẻ bài.</p>
+                <p className="text-st-destructive font-medium">Không thể tải chi tiết thẻ bài.</p>
                 <button
                   type="button"
                   onClick={() => setModalError(false)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 border border-slate-600 rounded-lg text-sm font-bold text-white hover:bg-slate-700"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-st-muted border border-st-input rounded-lg text-sm font-bold text-st-fg hover:bg-st-input"
                 >
                   <RotateCcw className="w-4 h-4" /> Thử lại
                 </button>
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <span className="text-xs uppercase font-extrabold tracking-wider text-sky-400">
+                <div className="flex items-center justify-between border-b border-st-input pb-3">
+                  <span className="text-xs uppercase font-extrabold tracking-wider text-st-primary">
                     {selectedCard.type === "vocab" ? "Từ vựng" : "Ngữ pháp"}
                   </span>
                   {selectedCard.audio_url ? (
                     <button
                       type="button"
                       onClick={() => playAudio(selectedCard.audio_url)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold rounded-lg text-xs transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-st-primary hover:bg-st-primary/80 text-st-primary-fg font-bold rounded-lg text-xs transition-colors"
                     >
                       <Volume2 className="w-4 h-4" /> Phát âm
                     </button>
                   ) : (
                     <span
-                      className="flex items-center gap-1 px-3 py-1.5 bg-slate-800 text-slate-500 rounded-lg text-xs font-semibold cursor-not-allowed"
+                      className="flex items-center gap-1 px-3 py-1.5 bg-st-muted text-st-muted-fg rounded-lg text-xs font-semibold cursor-not-allowed"
                       title="Chưa có audio"
                     >
                       <VolumeX className="w-4 h-4" /> Chưa có audio
@@ -655,7 +655,7 @@ export function VaultClient({
 
                 <div>
                   {selectedCard.image_url && (
-                    <div className="mb-3 overflow-hidden rounded-xl border border-slate-700 bg-slate-950 flex items-center justify-center">
+                    <div className="mb-3 overflow-hidden rounded-xl border border-st-fg bg-st-muted flex items-center justify-center">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={selectedCard.image_url}
@@ -664,14 +664,14 @@ export function VaultClient({
                       />
                     </div>
                   )}
-                  <h3 className="text-2xl font-black text-amber-300">{selectedCard.title}</h3>
-                  <p className="text-slate-200 mt-2 text-base leading-relaxed font-medium">
+                  <h3 className="text-2xl font-black text-st-accent">{selectedCard.title}</h3>
+                  <p className="text-st-fg mt-2 text-base leading-relaxed font-medium">
                     {selectedCard.meaning}
                   </p>
                   {selectedCard.example && (
-                    <div className="mt-3 p-3 bg-slate-800/80 rounded-xl border border-slate-700/60">
-                      <span className="block text-[11px] text-slate-400 uppercase font-bold">Ví dụ:</span>
-                      <p className="text-xs italic text-sky-200 mt-0.5">&ldquo;{selectedCard.example}&rdquo;</p>
+                    <div className="mt-3 p-3 bg-st-muted/80 rounded-xl border border-st-input/60">
+                      <span className="block text-[11px] text-st-muted-fg uppercase font-bold">Ví dụ:</span>
+                      <p className="text-xs italic text-st-muted-fg mt-0.5">&ldquo;{selectedCard.example}&rdquo;</p>
                     </div>
                   )}
                 </div>

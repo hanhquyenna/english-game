@@ -6,7 +6,7 @@ import { Mono, Tile } from "@/components/student/ui";
 
 /**
  * `styles.notification` — the accent-filled reminder tile on Challenges,
- * dismissible via the corner ✕.
+ * dismissible via the corner (X) icon.
  *
  * The page only renders this when the student genuinely has not practised
  * today, so it never fires falsely.

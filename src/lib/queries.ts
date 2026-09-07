@@ -4,6 +4,20 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { breakdownFromRow, type LevelBreakdown } from "@/lib/level-engine";
 import { computeStreak, isoDate, streakState, type StreakState } from "@/lib/progression";
 import { ITEM_COLORS, type EquippedItem, type PeepConfig } from "@/lib/peeps";
+import { buildIslands, type Island } from "@/lib/islands";
+import {
+  toMapNodes,
+  nodeIndexFor,
+  trackGrid,
+  DEFAULT_LANDMARKS,
+  type ClassMapData,
+  type VillageMapData,
+  type MapMate,
+  type MapNode,
+  type MapTrack,
+  type MapLandmark,
+  type TrackKind,
+} from "@/lib/class-map";
 import type { Tables } from "@/lib/database.types";
 
 export type StudentSummary = {
@@ -298,6 +312,191 @@ export async function getIslandTopics(classId: string, studentId: string) {
     percentComplete: t.percentComplete,
     hasExam: withExam.has(t.id),
   }));
+}
+
+export async function getClassMapData(
+  studentId: string
+): Promise<ClassMapData | null> {
+  return getVillageMapData(studentId);
+}
+
+export async function getVillageMapData(
+  studentId: string
+): Promise<VillageMapData | null> {
+  const db = createServerSupabase();
+  const [student, klass] = await Promise.all([
+    getStudentSummary(studentId),
+    getClassForStudent(studentId),
+  ]);
+  if (!student || !klass) return null;
+
+  // 1. Learn track
+  const learnTopics = await getIslandTopics(klass.id, studentId);
+  const learnIslands = buildIslands(learnTopics);
+  const currentLearnIsland =
+    learnIslands.find((isl) => isl.percentComplete < 100) ??
+    learnIslands[learnIslands.length - 1] ?? {
+      topicId: "default-learn",
+      name: "Unit 1",
+      subtitle: "",
+      percentComplete: 0,
+      doneThrough: 0,
+      activeLevel: 1,
+      unlocked: true,
+      lockedReason: null,
+      nodes: [],
+    };
+  const learnNodes = toMapNodes(
+    currentLearnIsland,
+    "learn",
+    currentLearnIsland.name
+  );
+
+  // 2. Arena track (library topics)
+  const { data: libraryTopicsRaw } = await db
+    .from("topics")
+    .select("*")
+    .or("class_id.is.null,source.eq.library")
+    .order("order");
+
+  const arenaTopics = (libraryTopicsRaw ?? []).map((t) => ({
+    id: t.id,
+    title: t.title,
+    subtitle: t.subtitle ?? null,
+    assigned_at: new Date().toISOString(),
+    percentComplete: 0,
+    hasExam: false,
+  }));
+
+  if (arenaTopics.length === 0) {
+    arenaTopics.push(
+      {
+        id: "arena-lib-1",
+        title: "Travel & Airport Conversations",
+        subtitle: "A1–B1 Spoken English Practice",
+        assigned_at: new Date().toISOString(),
+        percentComplete: 0,
+        hasExam: false,
+      },
+      {
+        id: "arena-lib-2",
+        title: "Workplace & Email Etiquette",
+        subtitle: "B1–B2 Business English",
+        assigned_at: new Date().toISOString(),
+        percentComplete: 0,
+        hasExam: false,
+      }
+    );
+  }
+
+  const arenaIslands = buildIslands(arenaTopics);
+  const currentArenaIsland = arenaIslands[0];
+  const arenaNodes = toMapNodes(
+    currentArenaIsland,
+    "arena",
+    currentArenaIsland.name
+  );
+
+  const arenaUnlocked = student.streak > 0 || student.totalXp >= 100;
+  const arenaLockedReason = arenaUnlocked
+    ? null
+    : "Luyện tập 1 hôm hoặc đạt 100 XP để mở Đấu trường";
+
+  // 3. Classmates
+  const { data: enrolled } = await db
+    .from("enrollments")
+    .select("student_id, users(id, name)")
+    .eq("class_id", klass.id);
+
+  const classmates = (enrolled ?? [])
+    .map((e) => e.users)
+    .filter((u): u is { id: string; name: string } => Boolean(u));
+
+  const studentIds = classmates.map((c) => c.id);
+
+  const [learnProgressRes, arenaProgressRes, avatarsMap] = await Promise.all([
+    studentIds.length
+      ? db
+          .from("topic_progress")
+          .select("student_id, percent_complete")
+          .eq("topic_id", currentLearnIsland.topicId)
+          .in("student_id", studentIds)
+      : Promise.resolve({ data: [] }),
+    studentIds.length
+      ? db
+          .from("topic_progress")
+          .select("student_id, percent_complete")
+          .eq("topic_id", currentArenaIsland.topicId)
+          .in("student_id", studentIds)
+      : Promise.resolve({ data: [] }),
+    getAvatars(studentIds),
+  ]);
+
+  const learnProgress = new Map(
+    (learnProgressRes.data ?? []).map((p) => [
+      p.student_id,
+      Number(p.percent_complete ?? 0),
+    ])
+  );
+  const arenaProgress = new Map(
+    (arenaProgressRes.data ?? []).map((p) => [
+      p.student_id,
+      Number(p.percent_complete ?? 0),
+    ])
+  );
+
+  const mates: MapMate[] = classmates.map((c) => {
+    const lp = learnProgress.get(c.id) ?? 0;
+    const ap = arenaProgress.get(c.id) ?? 0;
+    const isArena = ap > lp;
+    const track: TrackKind = isArena ? "arena" : "learn";
+    const percent = isArena ? ap : lp;
+    const nodeIndex = nodeIndexFor(percent, 9);
+    const av = avatarsMap.get(c.id);
+
+    return {
+      studentId: c.id,
+      name: c.name,
+      track,
+      nodeIndex,
+      seed: av?.seed ?? c.id,
+      overrides: (av?.overrides ?? {}) as Record<string, unknown>,
+      items: (av?.items ?? []) as MapMate["items"],
+      isMe: c.id === studentId,
+    };
+  });
+
+  const meMate = mates.find((m) => m.studentId === studentId);
+  const myLearnPct = learnProgress.get(studentId) ?? 0;
+  const myNodeIdx = nodeIndexFor(myLearnPct, 9);
+
+  const maxLearnReached =
+    mates.filter((m) => m.track === "learn").length > 0
+      ? Math.max(
+          ...mates.filter((m) => m.track === "learn").map((m) => m.nodeIndex)
+        )
+      : 0;
+  const classUnlocked = Math.min(9, Math.max(1, maxLearnReached + 1));
+
+  const landmarks = DEFAULT_LANDMARKS.map((lm) => ({
+    ...lm,
+    href: lm.href ? lm.href.replace(":id", studentId) : undefined,
+  }));
+
+  return {
+    className: klass.name,
+    tracks: [
+      { kind: "learn", label: "Đường Học", nodes: learnNodes },
+      { kind: "arena", label: "Đường Đấu", nodes: arenaNodes },
+    ],
+    landmarks,
+    mates,
+    me: { track: "learn", nodeIndex: myNodeIdx },
+    classUnlocked,
+    totalNodes: 9,
+    arenaUnlocked,
+    arenaLockedReason,
+  };
 }
 
 /** Counts of vocab / grammar / exercises per topic, for the curriculum list. */

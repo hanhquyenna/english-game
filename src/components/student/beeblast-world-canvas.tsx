@@ -36,18 +36,18 @@ interface LocationHotspot {
 const INSTITUTIONS: LocationHotspot[] = [
   {
     id: "learn",
-    title: "Learn Academy Institution",
-    subtitle: "Stationary Lesson Progression Map",
+    title: "Lộ trình Lớp học (Class Map)",
+    subtitle: "Bản đồ 2D & Nhân vật di chuyển",
     x: 22,
     y: 35,
     assetUrl: "/kenney/mini-forest/Previews/building-structure.png",
     npcCharacter: "Female adventurer",
     npcPose: "cheer0",
-    dialogTitle: "Learn Academy Institution",
-    dialogBody: "Enter the Learn Academy to view your stationary lesson progression map with all unit lessons!",
-    ctaText: "Enter Learn Map",
-    ctaHref: "learn-map",
-    badge: "LEARN ACADEMY",
+    dialogTitle: "Lộ trình Lớp học",
+    dialogBody: "Khám phá bản đồ 2D của lớp, đồng hành cùng các bạn và chinh phục 8 thử thách cùng trùm cuối!",
+    ctaText: "Vào Bản đồ lớp",
+    ctaHref: "class-map",
+    badge: "BẢN ĐỒ LỚP",
   },
   {
     id: "challenges",
@@ -260,20 +260,20 @@ export function BeeblastWorldCanvas({
           className="pointer-events-auto flex items-center gap-2.5 rounded-full border-2 border-st-fg bg-black/80 p-1.5 pr-4 shadow-2xl backdrop-blur-md transition-transform active:scale-95 hover:scale-105"
         >
           {/* Glowing Yellow Lightning Bolt */}
-          <div className="flex size-8 items-center justify-center rounded-full bg-amber-400 text-st-fg shadow-md border border-st-fg shrink-0">
+          <div className="flex size-8 items-center justify-center rounded-full bg-st-accent text-st-fg shadow-md border border-st-fg shrink-0">
             <Zap size={18} className="fill-st-fg text-st-fg" />
           </div>
 
           <div className="flex flex-col items-start">
             <div className="flex items-center justify-between w-full gap-4">
-              <span className="st-display text-xs font-black text-amber-300 uppercase tracking-wide">
+              <span className="st-display text-xs font-black text-st-accent uppercase tracking-wide">
                 Level {levelNumber}
               </span>
               <Mono className="text-[10px] font-black text-white">420 / 600 EXP</Mono>
             </div>
             {/* Visual Level Progress Fill Tube */}
-            <div className="w-36 h-2.5 rounded-full bg-black/60 border border-amber-400/60 overflow-hidden p-0.5 mt-0.5">
-              <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-200 shadow-sm w-[70%]" />
+            <div className="w-36 h-2.5 rounded-full bg-black/60 border border-st-accent/60 overflow-hidden p-0.5 mt-0.5">
+              <div className="h-full rounded-full bg-gradient-to-r from-st-accent to-st-accent/60 shadow-sm w-[70%]" />
             </div>
           </div>
         </button>

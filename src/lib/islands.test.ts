@@ -24,11 +24,12 @@ const topic = (
 });
 
 describe("levelsDone", () => {
-  it("maps a percentage onto whole levels", () => {
+  it("maps a percentage onto whole levels (8 levels per island)", () => {
     expect(levelsDone(0)).toBe(0);
-    expect(levelsDone(16)).toBe(0);
+    expect(levelsDone(12)).toBe(0);
+    expect(levelsDone(13)).toBe(1);
     expect(levelsDone(17)).toBe(1);
-    expect(levelsDone(50)).toBe(3);
+    expect(levelsDone(50)).toBe(4);
     expect(levelsDone(100)).toBe(LEVELS_PER_ISLAND);
   });
 
@@ -64,6 +65,21 @@ describe("sliceForLevel", () => {
   it("returns nothing for an empty topic", () => {
     expect(sliceForLevel([], 1)).toEqual([]);
   });
+
+  it("handles various exercise counts without overlapping or out of bound slices", () => {
+    for (const count of [3, 7, 8, 20]) {
+      const items = Array.from({ length: count }, (_, i) => `q${i + 1}`);
+      const seen = new Set<string>();
+      for (let lvl = 1; lvl <= LEVELS_PER_ISLAND; lvl++) {
+        const slice = sliceForLevel(items, lvl);
+        for (const item of slice) {
+          expect(seen.has(item)).toBe(false);
+          seen.add(item);
+        }
+      }
+      expect(seen.size).toBe(count);
+    }
+  });
 });
 
 describe("buildIslands", () => {
@@ -76,24 +92,24 @@ describe("buildIslands", () => {
     expect(islands.map((i) => i.topicId)).toEqual(["1", "2"]);
   });
 
-  it("gives each island six levels plus an exam", () => {
+  it("gives each island eight levels plus an exam", () => {
     const [island] = buildIslands([topic("1", "Unit 1", 0)]);
     expect(island.nodes).toHaveLength(LEVELS_PER_ISLAND + 1);
     expect(island.nodes.at(-1)).toMatchObject({ isExam: true, label: "Exam" });
   });
 
   it("marks levels done, one active, and the rest locked", () => {
-    // 43% of six levels = 2 done, so level 3 is where the student is.
+    // 43% of eight levels = 3 done, so level 4 is where the student is.
     const [island] = buildIslands([topic("1", "Unit 1", 43)]);
-    expect(island.doneThrough).toBe(2);
-    expect(island.activeLevel).toBe(3);
-    expect(island.nodes.slice(0, 2).every((n) => n.status === "done")).toBe(true);
-    expect(island.nodes[2].status).toBe("active");
-    expect(island.nodes.slice(3, 6).every((n) => n.status === "locked")).toBe(true);
+    expect(island.doneThrough).toBe(3);
+    expect(island.activeLevel).toBe(4);
+    expect(island.nodes.slice(0, 3).every((n) => n.status === "done")).toBe(true);
+    expect(island.nodes[3].status).toBe("active");
+    expect(island.nodes.slice(4, 8).every((n) => n.status === "locked")).toBe(true);
   });
 
   it("keeps the exam locked until every level is cleared", () => {
-    const [partial] = buildIslands([topic("1", "Unit 1", 83)]);
+    const [partial] = buildIslands([topic("1", "Unit 1", 87)]);
     expect(partial.nodes.at(-1)!.status).toBe("locked");
 
     const [complete] = buildIslands([topic("1", "Unit 1", 100)]);
@@ -123,8 +139,8 @@ describe("buildIslands", () => {
       topic("2", "Unit 2: Family", 43),
       topic("3", "Unit 3: Daily Routine", 0),
     ]);
-    expect(islands[0].doneThrough).toBe(6);
-    expect(islands[1].activeLevel).toBe(3);
+    expect(islands[0].doneThrough).toBe(8);
+    expect(islands[1].activeLevel).toBe(4);
     expect(islands[2].unlocked).toBe(true); // 43% clears the 40% gate
     expect(islands[2].activeLevel).toBe(1);
   });
@@ -135,11 +151,11 @@ describe("buildIslands", () => {
       topic("2", "Unit 2", 50),
     ]);
     expect(islands[0].nodes[0].label).toBe("Lesson 1");
-    expect(islands[0].nodes[5].label).toBe("Lesson 6");
-    expect(islands[0].nodes[6].label).toBe("Exam");
-    expect(islands[1].nodes[0].label).toBe("Lesson 7");
-    expect(islands[1].nodes[5].label).toBe("Lesson 12");
-    expect(islands[1].nodes[6].label).toBe("Exam");
+    expect(islands[0].nodes[7].label).toBe("Lesson 8");
+    expect(islands[0].nodes[8].label).toBe("Exam");
+    expect(islands[1].nodes[0].label).toBe("Lesson 9");
+    expect(islands[1].nodes[7].label).toBe("Lesson 16");
+    expect(islands[1].nodes[8].label).toBe("Exam");
   });
 });
 
@@ -149,7 +165,7 @@ describe("currentPosition", () => {
       topic("1", "Unit 1", 100),
       topic("2", "Unit 2", 43),
     ]);
-    expect(currentPosition(islands)).toEqual({ topicId: "2", level: 3 });
+    expect(currentPosition(islands)).toEqual({ topicId: "2", level: 4 });
   });
 
   it("is null when everything assigned is finished", () => {

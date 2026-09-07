@@ -162,6 +162,19 @@
   --persona-foreground: #ffffff;
   --persona-soft: color-mix(in oklab, #534ab7 10%, white);
   --persona-border: color-mix(in oklab, #534ab7 22%, white);
+
+  /* Village map procedural hues */
+  --grass-1: #a1b07e;
+  --grass-2: #96a675;
+  --grass-3: #8a9a6b;
+  --path-1: #d9c39a;
+  --path-2: #c7b59a;
+  --water-1: #88aeb0;
+  --water-2: #6f989c;
+  --tree-1: #87a26c;
+  --tree-2: #6c8859;
+  --tree-3: #55704a;
+  --stone: #b9a98d;
 }
 
 /* ---------------------------------------------------------------------------

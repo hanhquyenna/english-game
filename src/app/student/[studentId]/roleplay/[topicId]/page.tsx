@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { School } from "lucide-react";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { RolePlayClient } from "@/components/student/roleplay-client";
@@ -32,7 +33,7 @@ export default async function RolePlayTopicRoomPage({
   const topicData = topic ?? {
     id: topicId,
     title_vi: "Role Play Room",
-    icon: "🏫",
+    icon: <School className="h-6 w-6 text-st-primary" />,
     cefr_band: "A1",
   };
 

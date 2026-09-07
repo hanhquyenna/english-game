@@ -254,37 +254,37 @@ export function LessonPlansClient({
                 </div>
 
                 <div>
-                  <h3 className="font-bold text-slate-900 uppercase text-xs mb-1">
+                  <h3 className="font-bold text-foreground uppercase text-xs mb-1">
                     I. MỤC TIÊU BÀI HỌC (OBJECTIVES)
                   </h3>
-                  <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">
+                  <p className="text-foreground whitespace-pre-wrap leading-relaxed">
                     {selectedPlan.objectives || "Chưa nhập mục tiêu bài học."}
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="font-bold text-slate-900 uppercase text-xs mb-1">
+                  <h3 className="font-bold text-foreground uppercase text-xs mb-1">
                     II. THIẾT BỊ DẠY HỌC &amp; HỌC LIỆU (MATERIALS)
                   </h3>
-                  <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">
+                  <p className="text-foreground whitespace-pre-wrap leading-relaxed">
                     {selectedPlan.materials || "Chưa nhập thiết bị và học liệu."}
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="font-bold text-slate-900 uppercase text-xs mb-1">
+                  <h3 className="font-bold text-foreground uppercase text-xs mb-1">
                     III. TIẾN TRÌNH DẠY HỌC (ACTIVITIES)
                   </h3>
-                  <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">
+                  <p className="text-foreground whitespace-pre-wrap leading-relaxed">
                     {selectedPlan.activities || "Chưa nhập tiến trình dạy học."}
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="font-bold text-slate-900 uppercase text-xs mb-1">
+                  <h3 className="font-bold text-foreground uppercase text-xs mb-1">
                     IV. HƯỚNG DẪN VỀ NHÀ (HOMEWORK)
                   </h3>
-                  <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">
+                  <p className="text-foreground whitespace-pre-wrap leading-relaxed">
                     {selectedPlan.homework || "Chưa nhập hướng dẫn về nhà."}
                   </p>
                 </div>

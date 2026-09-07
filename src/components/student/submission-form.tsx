@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { showToast } from "@/lib/toast-store";
 import { StateButton } from "@/components/ui/button-state";
-import { FileText, Mic, Image as ImageIcon, Video as VideoIcon, Upload, Send, X } from "lucide-react";
+import { Check, FileText, Mic, Image as ImageIcon, Video as VideoIcon, Upload, Send, X } from "lucide-react";
 import { Mono, Tile } from "@/components/student/ui";
 
 export interface SubmissionFormProps {
@@ -98,7 +98,9 @@ export function SubmissionForm({
   if (submitted) {
     return (
       <Tile className="p-4 border-2 border-st-fg text-center rounded-2xl" style={{ backgroundColor: "var(--st-mint)", color: "var(--st-fg)" }}>
-        <h3 className="st-display text-lg font-black">Đã nộp bài thành công ✓</h3>
+        <h3 className="st-display flex items-center justify-center gap-1.5 text-lg font-black">
+          Đã nộp bài thành công <Check className="h-4 w-4" aria-hidden="true" />
+        </h3>
         <Mono className="mt-1 block text-xs opacity-80">
           Bài làm của em đang chờ giáo viên nhận xét và chấm thưởng.
         </Mono>

@@ -73,7 +73,7 @@ export default async function AssignmentHistoryPage({
           {events.length === 0 ? (
             <EmptyState icon={Clock} text="Chưa có lịch sử giao bài nào." />
           ) : (
-            <div className="relative border-l-2 border-slate-200 ml-4 space-y-6 py-2">
+            <div className="relative border-l-2 border-border ml-4 space-y-6 py-2">
               {events.map((event) => (
                 <div key={event.id} className="relative pl-6">
                   <span className="absolute -left-[9px] top-1 size-4 rounded-full border-2 border-white bg-[var(--persona)]" />
@@ -82,7 +82,7 @@ export default async function AssignmentHistoryPage({
                       {event.type === "TOPIC" ? (
                         <BookOpen size={16} className="text-[var(--persona)] shrink-0" />
                       ) : (
-                        <FileCheck size={16} className="text-emerald-600 shrink-0" />
+                        <FileCheck size={16} className="text-success shrink-0" />
                       )}
                       <p className="font-semibold text-sm">{event.title}</p>
                     </div>

@@ -142,7 +142,7 @@ export function DashboardClient({
                   <TooltipProvider>
                     <UiTooltip>
                       <TooltipTrigger>
-                        <Info className="w-3.5 h-3.5 text-muted-foreground hover:text-sky-400" />
+                        <Info className="w-3.5 h-3.5 text-muted-foreground hover:text-primary" />
                       </TooltipTrigger>
                       <TooltipContent className="max-w-xs text-xs">
                         Công thức: (Tổng điểm Composite của tất cả học sinh đã đánh giá) / (Số học sinh có điểm). Điểm Composite được tính weight trung bình từ 5 kỹ năng: Hours (20%), Vocab (20%), Exam (20%), Coverage (20%), Grammar (20%).
@@ -169,7 +169,7 @@ export function DashboardClient({
                   <TooltipProvider>
                     <UiTooltip>
                       <TooltipTrigger>
-                        <Info className="w-3.5 h-3.5 text-muted-foreground hover:text-amber-400" />
+                        <Info className="w-3.5 h-3.5 text-muted-foreground hover:text-warning" />
                       </TooltipTrigger>
                       <TooltipContent className="max-w-xs text-xs">
                         Công thức: Đếm số học sinh thỏa mãn ít nhất 1 trong 2 điều kiện: (1) Streak = 0 hôm nay (không làm bài trước 24h), HOẶC (2) Điểm Composite &lt; {attentionThreshold} điểm.
@@ -177,10 +177,10 @@ export function DashboardClient({
                     </UiTooltip>
                   </TooltipProvider>
                 </CardTitle>
-                <AlertTriangle className="size-4 text-amber-500" />
+                <AlertTriangle className="size-4 text-warning" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-amber-600">
+                <div className="text-3xl font-bold text-warning">
                   {needsAttention.length}
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
@@ -194,10 +194,10 @@ export function DashboardClient({
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Học sinh cần chú ý
                 </CardTitle>
-                <AlertTriangle className="size-4 text-amber-500" />
+                <AlertTriangle className="size-4 text-warning" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-amber-600">
+                <div className="text-3xl font-bold text-warning">
                   {needsAttention.length}
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
@@ -286,7 +286,7 @@ export function DashboardClient({
           {needsAttention.length > 0 ? (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base font-semibold text-amber-600">
+                <CardTitle className="text-base font-semibold text-warning">
                   Danh sách học sinh cần nhắc nhở
                 </CardTitle>
                 <CardDescription>

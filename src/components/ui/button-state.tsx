@@ -71,8 +71,8 @@ export function StateButton({
         buttonVariants({ variant, size }),
         "relative transition-all active:scale-95 duration-100",
         isPressed && "opacity-80 scale-95",
-        isSuccess && "bg-emerald-600 hover:bg-emerald-600 text-white border-emerald-600",
-        isError && "bg-rose-600 hover:bg-rose-600 text-white border-rose-600",
+        isSuccess && "bg-success hover:bg-success text-white border-success",
+        isError && "bg-danger hover:bg-danger text-white border-danger",
         className,
       )}
     >

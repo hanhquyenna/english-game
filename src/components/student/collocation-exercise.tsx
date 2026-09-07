@@ -77,8 +77,8 @@ export function CollocationExercise({
               className={`w-full p-3.5 rounded-xl border-2 text-xs text-left flex items-center justify-between transition-all ${optionStyle}`}
             >
               <span>{opt.text}</span>
-              {submitted && opt.isCorrect && <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />}
-              {submitted && isSelected && !opt.isCorrect && <XCircle className="w-4 h-4 text-rose-600 shrink-0" />}
+              {submitted && opt.isCorrect && <CheckCircle className="w-4 h-4 text-st-secondary shrink-0" />}
+              {submitted && isSelected && !opt.isCorrect && <XCircle className="w-4 h-4 text-st-destructive shrink-0" />}
             </button>
           );
         })}

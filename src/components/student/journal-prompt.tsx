@@ -6,7 +6,7 @@ import { submitJournal } from "@/lib/actions/student";
 import { UNLOCK_THRESHOLD } from "@/lib/lesson-path";
 import { Mono, Tile } from "@/components/student/ui";
 import { StateButton } from "@/components/ui/button-state";
-import { Mic, MicOff, Send, CheckCircle2, FileText } from "lucide-react";
+import { Mic, MicOff, Send, CheckCircle2, FileText, Check } from "lucide-react";
 
 export function JournalPrompt({
   studentId,
@@ -80,14 +80,14 @@ export function JournalPrompt({
 
   if (sent) {
     return (
-      <Tile className="p-4 bg-emerald-950/40 border-2 border-emerald-800/80 text-emerald-100 rounded-2xl">
+      <Tile className="p-4 bg-st-secondary/40 border-2 border-st-fg text-st-fg rounded-2xl">
         <div className="flex items-center gap-3">
-          <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0" />
+          <CheckCircle2 className="w-6 h-6 text-st-secondary shrink-0" />
           <div>
-            <span className="st-display block text-[15px] font-black text-emerald-200">
-              Đã gửi bài nhật ký ✓
+            <span className="st-display flex items-center gap-1.5 text-[15px] font-black text-st-fg">
+              Đã gửi bài nhật ký <Check className="h-4 w-4" aria-hidden="true" />
             </span>
-            <Mono className="mt-0.5 block text-xs text-emerald-300/80">
+            <Mono className="mt-0.5 block text-xs text-st-muted-fg/80">
               Giáo viên sẽ đọc bài và nhận xét. Phụ huynh cũng sẽ nhìn thấy bài nộp của bạn.
             </Mono>
           </div>
@@ -105,7 +105,7 @@ export function JournalPrompt({
       >
         <Tile className="p-4" style={{ backgroundColor: "var(--st-card)" }}>
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-sky-950/60 border border-sky-800/60 rounded-xl text-sky-400">
+            <div className="p-2.5 bg-st-secondary/60 border border-st-fg/60 rounded-xl text-st-fg">
               <FileText className="w-5 h-5" />
             </div>
             <div>
@@ -131,7 +131,7 @@ export function JournalPrompt({
           <label htmlFor="journal" className="st-display block text-[15px] font-black text-st-fg">
             Viết hoặc ghi âm suy nghĩ về {topicTitle}
           </label>
-          <span className="text-xs text-slate-400 font-mono">
+          <span className="text-xs text-st-muted-fg font-mono">
             {text.trim().length}/1200 ký tự
           </span>
         </div>
@@ -144,26 +144,26 @@ export function JournalPrompt({
           maxLength={1200}
           placeholder="Every morning I wake up at six o'clock. Then I..."
           autoFocus
-          className="w-full rounded-xl border-2 border-st-fg bg-st-bg p-3 text-[13px] text-st-fg outline-none focus:border-sky-500 transition-colors"
+          className="w-full rounded-xl border-2 border-st-fg bg-st-bg p-3 text-[13px] text-st-fg outline-none focus:border-st-primary transition-colors"
         />
 
         {/* Voice recording section */}
-        <div className="flex items-center justify-between p-3 bg-slate-900/60 border border-slate-800 rounded-xl">
+        <div className="flex items-center justify-between p-3 bg-st-muted/60 border border-st-input rounded-xl">
           <div className="flex items-center gap-2">
             {!isRecording ? (
               <button
                 type="button"
                 onClick={startRecording}
-                className="flex items-center gap-2 px-3 py-1.5 bg-rose-950/80 hover:bg-rose-900 border border-rose-800 text-rose-300 font-bold rounded-lg text-xs transition-colors"
+                className="flex items-center gap-2 px-3 py-1.5 bg-st-destructive/80 hover:bg-st-destructive border border-st-destructive text-st-primary-fg font-bold rounded-lg text-xs transition-colors"
               >
-                <Mic className="w-4 h-4 text-rose-400" />
+                <Mic className="w-4 h-4 text-st-primary-fg" />
                 <span>Bấm để ghi âm</span>
               </button>
             ) : (
               <button
                 type="button"
                 onClick={stopRecording}
-                className="flex items-center gap-2 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-lg text-xs animate-pulse"
+                className="flex items-center gap-2 px-3 py-1.5 bg-st-accent hover:bg-st-accent/80 text-st-fg font-black rounded-lg text-xs animate-pulse"
               >
                 <MicOff className="w-4 h-4" />
                 <span>Dừng ghi âm</span>

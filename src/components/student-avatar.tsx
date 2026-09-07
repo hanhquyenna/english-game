@@ -16,8 +16,6 @@ const CHARACTERS: NpcCharacter[] = [
   "Female person",
   "Male adventurer",
   "Male person",
-  "Robot",
-  "Zombie",
 ];
 
 function getCharacterForSeed(seed: string): NpcCharacter {
@@ -42,7 +40,7 @@ export function StudentAvatar({
   ring,
   ringWidth = 3,
   glow,
-  background = "var(--st-peach)",
+  background = "var(--persona-soft)",
   shape = "circle",
   label,
   labelColor,
@@ -91,9 +89,9 @@ export function StudentAvatar({
         className="block size-full overflow-hidden flex items-center justify-center relative p-0"
         style={{
           borderRadius: noFrame ? 0 : shape === "square" ? 4 : "50%",
-          background: noFrame ? "transparent" : (background ?? "var(--st-peach)"),
-          border: noFrame ? "none" : (ring ? `${ringWidth}px solid ${ring}` : "2px solid var(--st-fg)"),
-          boxShadow: noFrame ? "none" : (glow ? glow : "2px 2px 0 var(--st-fg)"),
+          background: noFrame ? "transparent" : (background ?? "var(--persona-soft)"),
+          border: noFrame ? "none" : (ring ? `${ringWidth}px solid ${ring}` : "2px solid var(--persona-border)"),
+          boxShadow: noFrame ? "none" : (glow ? glow : "2px 2px 0 var(--persona-border)"),
         }}
       >
         <img
@@ -141,7 +139,7 @@ export function StudentAvatar({
       {label ? (
         <span
           className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 rounded-full px-1.5 py-px text-[9px] font-black leading-tight text-white shadow-sm z-10 uppercase"
-          style={{ backgroundColor: labelColor ?? ring ?? "var(--st-primary)" }}
+          style={{ backgroundColor: labelColor ?? ring ?? "var(--primary)" }}
         >
           {label}
         </span>

@@ -95,21 +95,21 @@ export function StudentPortfolioDetailClient({
           const isRejected = j.status === "rejected";
 
           return (
-            <Card key={`j-${j.id}-${idx}`} className="border-2 border-st-fg font-medium shadow-sm" style={{ backgroundColor: "var(--st-card)", color: "var(--st-fg)" }}>
-              <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-st-muted">
+            <Card key={`j-${j.id}-${idx}`} className="rounded-lg border border-border bg-card text-foreground font-medium shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-border">
                 <div className="flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-st-primary" />
-                  <CardTitle className="text-base font-bold text-st-fg">Bài viết Nhật ký (Journal)</CardTitle>
+                  <FileText className="w-5 h-5 text-primary" />
+                  <CardTitle className="text-base font-bold text-foreground">Bài viết Nhật ký (Journal)</CardTitle>
                 </div>
                 <div>
                   {isApproved ? (
-                    <Badge className="bg-st-mint text-st-fg font-bold border border-st-fg">
-                      <CheckCircle className="w-3.5 h-3.5 mr-1 text-emerald-700" /> Đã duyệt (+10 XP + 5 Gems)
+                    <Badge className="bg-success text-foreground font-bold border border-border">
+                      <CheckCircle className="w-3.5 h-3.5 mr-1 text-success" /> Đã duyệt (+10 XP + 5 Gems)
                     </Badge>
                   ) : isRejected ? (
                     <Badge variant="destructive">Cần viết lại</Badge>
                   ) : (
-                    <Badge className="bg-st-peach text-st-fg font-bold border border-st-fg">Chờ duyệt</Badge>
+                    <Badge className="bg-persona-soft text-foreground font-bold border border-border">Chờ duyệt</Badge>
                   )}
                 </div>
               </CardHeader>
@@ -122,9 +122,9 @@ export function StudentPortfolioDetailClient({
                 />
 
                 {/* Quick Star Rating & Comment controls */}
-                <div className="space-y-3 p-3 border-2 border-st-fg rounded-xl" style={{ backgroundColor: "var(--st-bg)" }}>
+                <div className="space-y-3 p-3 border border-border rounded-lg bg-canvas">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-st-fg">Đánh giá sao:</span>
+                    <span className="text-xs font-bold text-foreground">Đánh giá sao:</span>
                     <div className="flex gap-1">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <button
@@ -136,8 +136,8 @@ export function StudentPortfolioDetailClient({
                           <Star
                             className={`w-5 h-5 ${
                               star <= (journalStars[j.id] ?? j.star_rating ?? 5)
-                                ? "text-amber-400 fill-amber-400"
-                                : "text-slate-600"
+                                ? "text-warning fill-warning"
+                                : "text-muted-foreground"
                             }`}
                           />
                         </button>
@@ -152,13 +152,13 @@ export function StudentPortfolioDetailClient({
                     onChange={(e) =>
                       setJournalComments((prev) => ({ ...prev, [j.id]: e.target.value }))
                     }
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-white outline-none focus:border-sky-500"
+                    className="w-full bg-background border border-border rounded-lg p-2.5 text-xs text-foreground outline-none focus:border-ring"
                   />
 
                   <div className="flex gap-2 justify-end pt-1">
                     <StateButton
                       onClickAction={() => handleApproveJournal(j.id)}
-                      className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase"
+                      className="bg-success hover:bg-success/90 text-white font-bold text-xs uppercase"
                     >
                       <CheckCircle className="w-4 h-4 mr-1" /> Duyệt bài (+10 XP + 5 Gems)
                     </StateButton>
@@ -181,40 +181,40 @@ export function StudentPortfolioDetailClient({
         const isGraded = s.overall_score !== null;
 
         return (
-          <Card key={`s-${s.id}-${idx}`} className="border-slate-800 bg-slate-900/90 text-white">
+          <Card key={`s-${s.id}-${idx}`} className="border-border bg-card text-foreground">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <div className="flex items-center gap-2">
-                <Mic className="w-5 h-5 text-amber-400" />
+                <Mic className="w-5 h-5 text-warning" />
                 <CardTitle className="text-base font-bold">
                   Bài Luyện nói (Lần thử {s.attempt_number})
                 </CardTitle>
               </div>
               <div>
                 {isGraded ? (
-                  <Badge className="bg-emerald-500 text-slate-950 font-extrabold">
+                  <Badge className="bg-success text-white font-extrabold">
                     {s.overall_score} điểm
                   </Badge>
                 ) : (
-                  <Badge className="bg-rose-500 text-white font-bold">Cần nghe &amp; chấm</Badge>
+                  <Badge className="bg-danger text-white font-bold">Cần nghe &amp; chấm</Badge>
                 )}
               </div>
             </CardHeader>
 
             <CardContent className="space-y-3 pt-2">
-              <div className="p-3 bg-slate-800/80 border border-slate-700 rounded-xl flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-300">File ghi âm của học sinh:</span>
+              <div className="p-3 bg-muted/80 border border-border rounded-xl flex items-center justify-between">
+                <span className="text-xs font-bold text-muted-foreground">File ghi âm của học sinh:</span>
                 <button
                   type="button"
                   onClick={() => playAudio(s.audio_url)}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs rounded-lg transition-colors"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-warning hover:bg-warning/90 text-foreground font-black text-xs rounded-lg transition-colors"
                 >
                   <Play className="w-4 h-4 fill-current" /> Nghe bài nói
                 </button>
               </div>
 
-              <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-xl space-y-3">
+              <div className="p-3 bg-muted/60 border border-border rounded-xl space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-300">Nhập điểm chấm thủ công (0-100):</span>
+                  <span className="text-xs font-bold text-muted-foreground">Nhập điểm chấm thủ công (0-100):</span>
                   <input
                     type="number"
                     min={0}
@@ -223,14 +223,14 @@ export function StudentPortfolioDetailClient({
                     onChange={(e) =>
                       setSpeakingScores((prev) => ({ ...prev, [s.id]: Number(e.target.value) }))
                     }
-                    className="w-20 bg-slate-800 border border-slate-700 rounded-lg p-2 text-center text-sm font-bold text-amber-300 outline-none"
+                    className="w-20 bg-background border border-border rounded-lg p-2 text-center text-sm font-bold text-foreground outline-none"
                   />
                 </div>
 
                 <div className="flex justify-end">
                   <StateButton
                     onClickAction={() => handleGradeSpeaking(s.id)}
-                    className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs uppercase"
+                    className="bg-warning hover:bg-warning/90 text-foreground font-black text-xs uppercase"
                   >
                     Nghe &amp; chấm lưu điểm
                   </StateButton>

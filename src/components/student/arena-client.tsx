@@ -78,13 +78,13 @@ export function ArenaClient({
             className="flex flex-col items-start text-left transition-transform active:scale-95"
           >
             <div className="flex items-center gap-3">
-              <span className="st-display text-xs font-black text-amber-300 uppercase tracking-wide">
+              <span className="st-display text-xs font-black text-st-accent uppercase tracking-wide">
                 Level {levelNumber}
               </span>
               <Mono className="text-[9px] font-black text-white">420 / 600 EXP</Mono>
             </div>
-            <div className="w-32 h-2 rounded-full bg-black/60 border border-amber-400/60 overflow-hidden p-0.5 mt-0.5">
-              <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-200 shadow-sm w-[85%]" />
+            <div className="w-32 h-2 rounded-full bg-black/60 border border-st-accent/60 overflow-hidden p-0.5 mt-0.5">
+              <div className="h-full rounded-full bg-gradient-to-r from-st-accent to-st-accent/60 shadow-sm w-[85%]" />
             </div>
           </button>
         </div>
@@ -175,7 +175,7 @@ export function ArenaClient({
                   <span className="st-display text-xs font-black text-white block whitespace-nowrap">
                     {island.name}
                   </span>
-                  <Mono className="text-[9px] font-extrabold text-amber-300 block">
+                  <Mono className="text-[9px] font-extrabold text-st-accent block">
                     CEFR {cefrBand} Battle Station
                   </Mono>
                 </div>

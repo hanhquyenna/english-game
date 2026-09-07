@@ -28,7 +28,7 @@ export function StatusBadge({ score, streak }: { score: number; streak: number }
     return (
       <div className="flex flex-wrap gap-1">
         {isWeak && <Badge variant="danger">Điểm yếu</Badge>}
-        {lostStreak && <Badge className="bg-amber-500 hover:bg-amber-600 text-white font-bold">Mất streak</Badge>}
+        {lostStreak && <Badge className="bg-warning hover:bg-warning/90 text-white font-bold">Mất streak</Badge>}
       </div>
     );
   }

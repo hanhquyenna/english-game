@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Mic, Sparkles } from "lucide-react";
+import { ArrowLeft, Dices, House, Mic, School, Sparkles, UtensilsCrossed } from "lucide-react";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { BlockButton, Mono, PageTitle, Tile } from "@/components/student/ui";
@@ -26,9 +26,9 @@ export default async function RolePlayTopicSelectPage({
     .order("created_at");
 
   const topicList = (topics as any[]) ?? [
-    { id: "10000000-0000-0000-0000-000000000001", title_vi: "House Tour", icon: "🏠", cefr_band: "A1" },
-    { id: "10000000-0000-0000-0000-000000000002", title_vi: "My Classroom", icon: "🏫", cefr_band: "A1" },
-    { id: "10000000-0000-0000-0000-000000000003", title_vi: "My Lunch", icon: "🍱", cefr_band: "A1" },
+    { id: "10000000-0000-0000-0000-000000000001", title_vi: "House Tour", icon: <House className="h-8 w-8 text-st-primary" />, cefr_band: "A1" },
+    { id: "10000000-0000-0000-0000-000000000002", title_vi: "My Classroom", icon: <School className="h-8 w-8 text-st-primary" />, cefr_band: "A1" },
+    { id: "10000000-0000-0000-0000-000000000003", title_vi: "My Lunch", icon: <UtensilsCrossed className="h-8 w-8 text-st-primary" />, cefr_band: "A1" },
   ];
 
   const randomTopic = topicList[Math.floor(Math.random() * topicList.length)];
@@ -59,7 +59,7 @@ export default async function RolePlayTopicSelectPage({
           >
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-3xl">{t.icon}</span>
+                <span className="text-st-primary">{t.icon}</span>
                 <Mono className="rounded-[2px] bg-st-peach px-2 py-0.5 font-bold text-st-primary">
                   {t.cefr_band}
                 </Mono>
@@ -86,7 +86,7 @@ export default async function RolePlayTopicSelectPage({
           <Tile className="flex flex-col justify-between border-dashed bg-st-peach p-4">
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-3xl">🎲</span>
+                <Dices className="h-8 w-8 text-st-fg" />
                 <Mono className="rounded-[2px] bg-st-accent px-2 py-0.5 font-bold text-st-fg">
                   Ngẫu nhiên
                 </Mono>

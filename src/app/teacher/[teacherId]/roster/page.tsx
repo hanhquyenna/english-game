@@ -88,7 +88,7 @@ export default async function RosterPage({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-amber-600">
+            <p className="text-3xl font-bold text-warning">
               {needsAttention.length}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">

@@ -41,8 +41,7 @@ export function SubmissionViewer({
       {/* TEXT CONTENT */}
       {content && (
         <div
-          className="p-3.5 border-2 border-st-fg rounded-xl text-st-fg text-sm leading-relaxed whitespace-pre-wrap font-medium shadow-sm"
-          style={{ backgroundColor: "var(--st-card)" }}
+          className="p-3.5 border border-border rounded-lg bg-card text-foreground text-sm leading-relaxed whitespace-pre-wrap font-medium shadow-sm"
         >
           {content}
         </div>
@@ -51,14 +50,12 @@ export function SubmissionViewer({
       {/* AUDIO PLAYER */}
       {type === "audio" && mediaUrl && (
         <div
-          className="p-3 border-2 border-st-fg rounded-xl flex items-center gap-3 shadow-sm"
-          style={{ backgroundColor: "var(--st-card)" }}
+          className="p-3 border border-border rounded-lg bg-card flex items-center gap-3 shadow-sm"
         >
           <div
-            className="p-2.5 rounded-lg shrink-0 font-bold"
-            style={{ backgroundColor: "var(--st-peach)", color: "var(--st-fg)" }}
+            className="p-2.5 rounded-lg shrink-0 font-bold bg-persona-soft text-foreground"
           >
-            <Mic className="w-5 h-5" style={{ color: "var(--st-primary)" }} />
+            <Mic className="w-5 h-5 text-primary" />
           </div>
           <audio controls src={mediaUrl} className="w-full h-9" />
         </div>
@@ -67,7 +64,7 @@ export function SubmissionViewer({
       {/* IMAGE WITH LIGHTBOX */}
       {type === "image" && mediaUrl && (
         <div className="space-y-2">
-          <div className="relative group inline-block overflow-hidden rounded-xl border-2 border-st-fg max-w-sm shadow-sm" style={{ backgroundColor: "var(--st-card)" }}>
+          <div className="relative group inline-block overflow-hidden rounded-lg border border-border bg-card max-w-sm shadow-sm">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={mediaUrl}
@@ -78,8 +75,7 @@ export function SubmissionViewer({
             <button
               type="button"
               onClick={() => setLightboxOpen(true)}
-              className="absolute bottom-2 right-2 p-1.5 border-2 border-st-fg rounded-lg text-xs font-bold flex items-center gap-1 opacity-90 transition-opacity shadow-md"
-              style={{ backgroundColor: "var(--st-accent)", color: "var(--st-fg)" }}
+              className="absolute bottom-2 right-2 p-1.5 border border-border rounded-lg bg-persona-soft text-foreground text-xs font-bold flex items-center gap-1 opacity-90 transition-opacity shadow-md"
             >
               <Maximize2 className="w-3.5 h-3.5" /> Phóng to
             </button>
@@ -91,8 +87,7 @@ export function SubmissionViewer({
               <button
                 type="button"
                 onClick={() => setLightboxOpen(false)}
-                className="absolute top-4 right-4 p-2 border-2 border-st-fg rounded-full hover:opacity-80 transition-opacity shadow-xl"
-                style={{ backgroundColor: "var(--st-card)", color: "var(--st-fg)" }}
+                className="absolute top-4 right-4 p-2 border border-border rounded-full bg-card text-foreground hover:opacity-80 transition-opacity shadow-xl"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -100,7 +95,7 @@ export function SubmissionViewer({
               <img
                 src={mediaUrl}
                 alt="Phóng to bài nộp"
-                className="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl border-4 border-st-fg"
+                className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl border border-border"
               />
             </div>
           )}
@@ -109,7 +104,7 @@ export function SubmissionViewer({
 
       {/* VIDEO PLAYER INLINE */}
       {type === "video" && mediaUrl && (
-        <div className="overflow-hidden rounded-xl border-2 border-st-fg max-w-md bg-black shadow-sm">
+        <div className="overflow-hidden rounded-lg border border-border max-w-md bg-black shadow-sm">
           <video controls src={mediaUrl} className="w-full max-h-80" />
         </div>
       )}
@@ -122,33 +117,31 @@ export function SubmissionViewer({
               <iframe
                 src={mediaUrl}
                 title="Xem bài nộp PDF"
-                className="w-full h-80 rounded-xl border-2 border-st-fg shadow-sm"
+                className="w-full h-80 rounded-lg border border-border shadow-sm"
               />
               <a
                 href={mediaUrl}
                 download={fileName}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 text-xs font-bold text-st-primary hover:underline"
+                className="inline-flex items-center gap-2 text-xs font-bold text-primary hover:underline"
               >
                 <Download className="w-4 h-4" /> Tải về file PDF gốc ({formatFileSize(fileSizeBytes)})
               </a>
             </div>
           ) : (
             <div
-              className="p-4 border-2 border-st-fg rounded-xl flex items-center justify-between shadow-sm"
-              style={{ backgroundColor: "var(--st-card)" }}
+              className="p-4 border border-border rounded-lg bg-card flex items-center justify-between shadow-sm"
             >
               <div className="flex items-center gap-3">
                 <div
-                  className="p-2.5 rounded-lg"
-                  style={{ backgroundColor: "var(--st-mint)", color: "var(--st-fg)" }}
+                  className="p-2.5 rounded-lg bg-secondary text-foreground"
                 >
                   <FileText className="w-6 h-6" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-st-fg">{fileName}</p>
-                  <p className="text-[11px] text-st-muted-fg">{formatFileSize(fileSizeBytes)}</p>
+                  <p className="text-xs font-bold text-foreground">{fileName}</p>
+                  <p className="text-[11px] text-muted-foreground">{formatFileSize(fileSizeBytes)}</p>
                 </div>
               </div>
               <a
@@ -156,8 +149,7 @@ export function SubmissionViewer({
                 download={fileName}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 px-3 py-2 font-bold rounded-lg text-xs transition-opacity active:opacity-80 border-2 border-st-fg"
-                style={{ backgroundColor: "var(--st-primary)", color: "var(--st-primary-fg)" }}
+                className="inline-flex items-center gap-2 px-3 py-2 font-bold rounded-lg text-xs transition-opacity active:opacity-80 border border-border bg-primary text-primary-foreground"
               >
                 <Download className="w-4 h-4" /> Tải xuống để xem
               </a>

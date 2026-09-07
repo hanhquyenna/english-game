@@ -96,8 +96,8 @@ export function VaultReviewClient({
           onClick={() => setVisualMode(!visualMode)}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all ${
             visualMode
-              ? "bg-amber-400 border-amber-500 text-slate-950 shadow-md"
-              : "bg-slate-800 border-slate-700 text-slate-300"
+              ? "bg-st-accent border-st-fg text-st-fg shadow-md"
+              : "bg-st-muted border-st-input text-st-muted-fg"
           }`}
           title="Chế độ liên kết trực tiếp Hình ảnh - Âm thanh"
         >
@@ -162,7 +162,7 @@ export function VaultReviewClient({
             {visualMode && !flipped ? (
               <div className="flex flex-col items-center gap-3">
                 {currentItem.imageUrl ? (
-                  <div className="size-36 rounded-2xl overflow-hidden border-2 border-slate-700 bg-slate-950 flex items-center justify-center shadow-lg">
+                  <div className="size-36 rounded-2xl overflow-hidden border-2 border-st-fg bg-st-muted flex items-center justify-center shadow-lg">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={currentItem.imageUrl}
@@ -171,11 +171,11 @@ export function VaultReviewClient({
                     />
                   </div>
                 ) : (
-                  <div className="size-32 rounded-2xl bg-amber-500/20 border-2 border-amber-500/40 flex items-center justify-center text-amber-400">
+                  <div className="size-32 rounded-2xl bg-st-accent/20 border-2 border-st-accent/40 flex items-center justify-center text-st-accent">
                     <Volume2 className="w-12 h-12" />
                   </div>
                 )}
-                <span className="text-xs font-bold text-amber-400 flex items-center gap-1">
+                <span className="text-xs font-bold text-st-accent flex items-center gap-1">
                   <Volume2 className="w-4 h-4" /> (Đang phát âm thanh mẫu...)
                 </span>
               </div>
@@ -187,7 +187,7 @@ export function VaultReviewClient({
             {flipped ? (
               <div className="mt-4 border-t-2 border-st-muted pt-4 w-full">
                 {visualMode && (
-                  <h4 className="text-xl font-black text-amber-300 mb-2">{currentItem.term}</h4>
+                  <h4 className="text-xl font-black text-st-accent mb-2">{currentItem.term}</h4>
                 )}
                 <p className="text-[17px] font-bold text-st-primary">
                   {currentItem.meaningOrExplanation}
@@ -220,18 +220,18 @@ export function VaultReviewClient({
                 type="button"
                 disabled={pending}
                 onClick={() => rate(1)}
-                className="flex items-center justify-center gap-2 rounded-xl border-2 border-rose-500 py-3.5 bg-rose-950/40 text-rose-300 font-bold transition-all active:scale-95 hover:bg-rose-900/60"
+                className="flex items-center justify-center gap-2 rounded-xl border-2 border-st-destructive py-3.5 bg-st-destructive/40 text-st-fg font-bold transition-all active:scale-95 hover:bg-st-destructive/60"
               >
-                <ThumbsDown className="w-5 h-5 text-rose-400" />
+                <ThumbsDown className="w-5 h-5 text-st-destructive" />
                 <span>Chưa nhớ</span>
               </button>
               <button
                 type="button"
                 disabled={pending}
                 onClick={() => rate(4)}
-                className="flex items-center justify-center gap-2 rounded-xl border-2 border-emerald-500 py-3.5 bg-emerald-950/40 text-emerald-300 font-bold transition-all active:scale-95 hover:bg-emerald-900/60"
+                className="flex items-center justify-center gap-2 rounded-xl border-2 border-st-secondary py-3.5 bg-st-secondary/40 text-st-fg font-bold transition-all active:scale-95 hover:bg-st-secondary/60"
               >
-                <ThumbsUp className="w-5 h-5 text-emerald-400" />
+                <ThumbsUp className="w-5 h-5 text-st-secondary" />
                 <span>Đã nhớ</span>
               </button>
             </div>
