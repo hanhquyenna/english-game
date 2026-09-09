@@ -116,16 +116,12 @@ Thêm bảng/cấu hình đơn giản (hoặc constant nếu chưa cần bảng 
 
 ## 5. Supabase — kết nối & phạm vi RLS
 
-**Dự án**: `beeblast-demo` (project ref `qvmyhwbgowoqbrxbfrow`, region `ap-southeast-1`, Postgres 17).
+**Dự án**: `beeblast-demo` (region `ap-southeast-1`, Postgres 17).
 
-**Đã cấu hình sẵn trong `.env.local` (Antigravity dùng thẳng, không tạo project mới, không đổi key)**:
+**Cấu hình trong `.env.local`**:
 ```
-NEXT_PUBLIC_SUPABASE_URL=https://qvmyhwbgowoqbrxbfrow.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_XiIMsB_YkN-0IBIBT6ON9Q__wn2EREq
-```
-Legacy anon JWT (tương thích ngược nếu code cũ còn dùng `SUPABASE_ANON_KEY` dạng JWT thay vì publishable key mới):
-```
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXlod2Jnb3dvcWJyeGJmcm93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0NTU2MDAsImV4cCI6MjEwMjAzMTYwMH0.p9OPgqwYOenrJabiv18rOFWCGfdZ1NEjrcuBY2AlY9U
+NEXT_PUBLIC_SUPABASE_URL=https://<your-project-ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-supabase-anon-key>
 ```
 
 **Tuyệt đối không**: không lấy/không dùng `service_role` key ở bất kỳ đâu trong `src` (client hay server component chạy trong request user) — đúng nguyên tắc 7.3 FRS v2. Nếu C4 (tính league cuối tuần) cần bypass RLS để đọc toàn trường, chỉ làm trong Edge Function riêng, key `service_role` lấy qua Supabase secrets của project, không hardcode trong repo.
